@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil — JDGo</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <h1 class="page-title">Profil</h1>
+    <p class="page-sub">Zarządzaj danymi konta i ustawieniami działalności.</p>
+
+    <form id="profileForm" class="profile-card">
+      <div class="profile-head">
+        <div class="profile-id">
+          <h2 id="phName">—</h2>
+          <div class="profile-meta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
+            <span id="phEmail">—</span>
+            <span class="status-pill"><span class="dot"></span>Konto aktywne</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-body">
+        <div class="profile-cols">
+          <section class="profile-sec">
+            <h3><span class="sec-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21a8 8 0 0 1 10.821-7.487"/><path d="M21.378 16.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><circle cx="10" cy="8" r="5"/></svg></span>Dane podstawowe</h3>
+            <div class="field-grid">
+              <label>Adres e-mail
+                <input type="email" name="email" disabled>
+                <span class="field-hint">Nie można zmienić</span>
+              </label>
+              <label>Nazwa wyświetlana
+                <input type="text" name="display_name" placeholder="np. Jan Kowalski">
+              </label>
+            </div>
+          </section>
+
+          <section class="profile-sec">
+            <h3><span class="sec-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="m9 15 2 2 4-4"/></svg></span>Dane działalności</h3>
+            <div class="field-grid">
+              <label>Kategoria świadczonych usług (PKD/PKWiU)
+                <input type="text" name="service_category" placeholder="np. 62.01 — programowanie">
+              </label>
+              <label>Domyślna stawka VAT
+                <select name="default_vat_rate_id">
+                  <option value="1">23%</option>
+                  <option value="2">8%</option>
+                  <option value="3">5%</option>
+                  <option value="4">0%</option>
+                  <option value="5">zw.</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="profile-sec">
+            <h3><span class="sec-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Ustawienia finansowe</h3>
+            <div class="field-grid">
+              <label>Forma opodatkowania
+                <select name="tax_form">
+                  <option value="skala">Skala podatkowa (12% / 32%)</option>
+                  <option value="liniowy">Podatek liniowy (19%)</option>
+                </select>
+              </label>
+              <label>Domyślna waluta
+                <input type="text" name="default_currency" maxlength="3" placeholder="PLN">
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <aside class="profile-summary">
+          <h4>Podsumowanie ustawień</h4>
+          <div class="sum-row">
+            <span class="sum-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="m9 15 2 2 4-4"/></svg></span>
+            <div class="sum-main"><div class="sum-label">Kategoria usług (PKD/PKWiU)</div><div class="sum-val" id="sumCat">—</div></div>
+          </div>
+          <div class="sum-row">
+            <span class="sum-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>
+            <div class="sum-main"><div class="sum-label">Stawka VAT</div><div class="sum-val" id="sumVat">—</div></div>
+          </div>
+          <div class="sum-row">
+            <span class="sum-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12"/><path d="M4 14h9"/><path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"/></svg></span>
+            <div class="sum-main"><div class="sum-label">Waluta</div><div class="sum-val" id="sumCur">—</div></div>
+          </div>
+          <div class="sum-row">
+            <span class="sum-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="m19 8 3 8a5 5 0 0 1-6 0z"/><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1"/><path d="m5 8 3 8a5 5 0 0 1-6 0z"/><path d="M7 21h10"/></svg></span>
+            <div class="sum-main"><div class="sum-label">Forma opodatkowania</div><div class="sum-val" id="sumForm">—</div></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="profile-foot">
+        <span class="foot-upd">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Ostatnia aktualizacja: <span id="phUpdated">—</span>
+        </span>
+        <div class="foot-actions">
+          <button class="btn btn-outline" type="button" id="pCancel">Anuluj</button>
+          <button class="btn" type="submit">Zapisz zmiany</button>
+        </div>
+      </div>
+      <p id="msgProfile" class="msg" style="padding:0 28px 16px;margin:0"></p>
+    </form>
+
+    <form id="passwordForm" class="profile-card" style="margin-top:22px">
+      <div class="profile-head">
+        <div class="profile-id">
+          <h2>Bezpieczeństwo</h2>
+          <div class="profile-meta"><span>Zmień hasło i zarządzaj bezpieczeństwem konta.</span></div>
+        </div>
+      </div>
+      <div class="profile-body">
+        <div class="profile-cols">
+          <div class="pw-fields">
+            <label class="pw-field">Stare hasło
+              <input type="password" name="old_password" required>
+            </label>
+            <label class="pw-field">Nowe hasło
+              <input type="password" name="new_password" minlength="10" required>
+            </label>
+            <label class="pw-field">Potwierdź nowe hasło
+              <input type="password" name="confirm_password" minlength="10" required>
+            </label>
+          </div>
+        </div>
+        <aside class="profile-summary">
+          <div class="sum-row">
+            <span class="sum-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg></span>
+            <div class="sum-main"><div class="sum-val" id="secTwofaTitle">2FA: —</div><div class="sum-label" id="secTwofaDesc">—</div></div>
+          </div>
+          <div class="sum-row">
+            <span class="sum-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 17 4 4 4-4"/><path d="M16 2v3"/><path d="M18 13v8"/><path d="M21 10.354V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7.343"/><path d="M3 9h18"/><path d="M8 2v3"/></svg></span>
+            <div class="sum-main"><div class="sum-label">Ostatnia zmiana hasła</div><div class="sum-val" id="secPwDate">—</div></div>
+          </div>
+          <div class="sum-row">
+            <span class="sum-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M6.376 18.91a6 6 0 0 1 11.249.003"/><circle cx="12" cy="11" r="4"/></svg></span>
+            <div class="sum-main"><div class="sum-val">Poziom bezpieczeństwa <span class="pill ok" id="secLevel">—</span></div><div class="sum-label" id="secLevelDesc">—</div></div>
+          </div>
+        </aside>
+      </div>
+      <div class="profile-foot">
+        <span></span>
+        <div class="foot-actions">
+          <button class="btn btn-outline" type="button" id="pwCancel">Anuluj</button>
+          <button class="btn" type="submit">Zapisz zmiany</button>
+        </div>
+      </div>
+      <p id="msgPassword" class="msg" style="padding:0 28px 16px;margin:0"></p>
+    </form>
+
+    <div class="profile-card konto-card" style="margin-top:22px">
+      <div class="profile-cols">
+        <h3 class="konto-title">Konto</h3>
+        <p class="konto-2fa">Uwierzytelnianie dwuetapowe (2FA): <span id="twofaStatus">—</span> <span class="pill ok" id="twofaPill">—</span></p>
+        <button class="btn btn-outline" id="exportData">
+          <svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m16 6-4 4-4-4"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 18h.01"/><path d="M10 18h.01"/></svg>
+          Pobierz moje dane (RODO)
+        </button>
+        <button type="button" class="danger-row" id="deleteAccount">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span class="danger-main"><span class="danger-title">Usuń konto</span><span class="danger-desc">Trwale usuń swoje konto i wszystkie powiązane dane.</span></span>
+          <span class="danger-chev">›</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/policy.js"></script>
+  <script src="/js/password.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script>
+    const form = document.getElementById('profileForm');
+    const F = form.elements;
+    const msgProfile = document.getElementById('msgProfile');
+    const passwordForm = document.getElementById('passwordForm');
+    const msgPassword = document.getElementById('msgPassword');
+    let snapshot = {};
+
+    enhancePassword(passwordForm.old_password, false);
+    enhancePassword(passwordForm.new_password, true);
+    enhancePassword(passwordForm.confirm_password, false);
+
+    const selText = (sel) => (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : '—');
+    function updateSummary() {
+      document.getElementById('sumCat').textContent = F.service_category.value.trim() || '—';
+      document.getElementById('sumVat').textContent = selText(F.default_vat_rate_id);
+      document.getElementById('sumCur').textContent = F.default_currency.value.trim() || '—';
+      document.getElementById('sumForm').textContent = selText(F.tax_form);
+    }
+    function takeSnapshot() {
+      snapshot = {
+        display_name: F.display_name.value,
+        service_category: F.service_category.value,
+        default_vat_rate_id: F.default_vat_rate_id.value,
+        tax_form: F.tax_form.value,
+        default_currency: F.default_currency.value
+      };
+    }
+
+    async function load() {
+      try {
+        const p = await api('/profile');
+        F.email.value = p.email;
+        F.display_name.value = p.display_name || '';
+        F.service_category.value = p.service_category || '';
+        F.default_vat_rate_id.value = p.default_vat_rate_id;
+        F.tax_form.value = p.tax_form;
+        F.default_currency.value = p.default_currency;
+        document.getElementById('phName').textContent = p.display_name || p.email;
+        document.getElementById('phEmail').textContent = p.email;
+        document.getElementById('phUpdated').textContent = p.updated_at || '—';
+
+        // Sekcja Bezpieczeństwo + Konto
+        const enabled = !!p.totp_enabled;
+        document.getElementById('twofaStatus').textContent = enabled ? 'włączone.' : 'wyłączone.';
+        const tPill = document.getElementById('twofaPill');
+        tPill.textContent = enabled ? 'Włączone' : 'Wyłączone';
+        tPill.className = 'pill ' + (enabled ? 'ok' : 'off');
+        document.getElementById('secTwofaTitle').innerHTML = '2FA: <b>' + (enabled ? 'Włączone' : 'Wyłączone') + '</b>';
+        document.getElementById('secTwofaDesc').textContent = enabled
+          ? 'Uwierzytelnianie dwuetapowe jest aktywne.' : 'Uwierzytelnianie dwuetapowe nie jest aktywne.';
+        document.getElementById('secPwDate').textContent = p.updated_at || '—';
+        const lvl = document.getElementById('secLevel');
+        lvl.textContent = enabled ? 'Dobry' : 'Podstawowy';
+        lvl.className = 'pill ' + (enabled ? 'ok' : 'off');
+        document.getElementById('secLevelDesc').textContent = enabled
+          ? 'Twoje konto jest odpowiednio chronione.' : 'Włącz 2FA, aby zwiększyć bezpieczeństwo.';
+
+        updateSummary();
+        takeSnapshot();
+      } catch (err) { /* layout.js przekieruje do logowania */ }
+    }
+    load();
+
+    form.addEventListener('input', updateSummary);
+    form.addEventListener('change', updateSummary);
+
+    // Anuluj — przywróć wartości sprzed edycji
+    document.getElementById('pCancel').addEventListener('click', () => {
+      F.display_name.value = snapshot.display_name || '';
+      F.service_category.value = snapshot.service_category || '';
+      F.default_vat_rate_id.value = snapshot.default_vat_rate_id;
+      F.tax_form.value = snapshot.tax_form;
+      F.default_currency.value = snapshot.default_currency || '';
+      updateSummary();
+      msgProfile.className = 'msg'; msgProfile.textContent = '';
+    });
+
+    // Zapis danych profilu
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgProfile.className = 'msg';
+      try {
+        await api('/profile', 'PUT', {
+          display_name: F.display_name.value,
+          service_category: F.service_category.value,
+          default_vat_rate_id: Number(F.default_vat_rate_id.value),
+          tax_form: F.tax_form.value,
+          default_currency: F.default_currency.value
+        });
+        msgProfile.className = 'msg ok';
+        msgProfile.textContent = 'Zapisano.';
+        document.getElementById('phName').textContent = F.display_name.value || F.email.value;
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        document.getElementById('phUpdated').textContent =
+          now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        takeSnapshot();
+      } catch (err) { msgProfile.textContent = err.message; }
+    });
+
+    // Zmiana hasła
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgPassword.className = 'msg';
+      const f = e.target;
+      if (!passwordValid(f.new_password.value)) {
+        msgPassword.textContent = 'Nowe hasło nie spełnia wymagań (min. 10 znaków, wielka litera, cyfra, znak specjalny)';
+        return;
+      }
+      if (f.new_password.value !== f.confirm_password.value) {
+        msgPassword.textContent = 'Nowe hasła nie są takie same';
+        return;
+      }
+      try {
+        await api('/auth/password', 'POST', {
+          old_password: f.old_password.value,
+          new_password: f.new_password.value
+        });
+        msgPassword.className = 'msg ok';
+        msgPassword.textContent = 'Hasło zmienione.';
+        f.reset();
+        f.elements.new_password.dispatchEvent(new Event('input', { bubbles: true }));
+        const now = new Date(); const pad = (n) => String(n).padStart(2, '0');
+        document.getElementById('secPwDate').textContent =
+          now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+      } catch (err) { msgPassword.textContent = err.message; }
+    });
+
+    // Anuluj — wyczyść formularz zmiany hasła
+    document.getElementById('pwCancel').addEventListener('click', () => {
+      passwordForm.reset();
+      passwordForm.elements.new_password.dispatchEvent(new Event('input', { bubbles: true }));
+      msgPassword.className = 'msg'; msgPassword.textContent = '';
+    });
+
+    // WF-17: eksport danych (RODO art. 20) — pobranie pliku JSON
+    document.getElementById('exportData').addEventListener('click', async () => {
+      try {
+        const data = await api('/auth/account/export');
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'jdgo-eksport.json'; a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) { alert(err.message); }
+    });
+
+    // Usunięcie konta
+    document.getElementById('deleteAccount').addEventListener('click', async () => {
+      if (!confirm('Na pewno trwale usunąć konto i wszystkie dane?')) return;
+      await api('/auth/account', 'DELETE');
+      location.href = '/pages/auth.html';
+    });
+  </script>
+</body>
+</html>

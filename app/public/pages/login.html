@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logowanie — JDGo</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/pages/auth.html">JDGo</a></header>
+
+  <main class="page">
+    <div class="card">
+      <h1>Logowanie</h1>
+      <p class="lead">Zaloguj się do swojego konta.</p>
+      <form id="form">
+        <label>Adres e-mail
+          <input type="email" name="email" placeholder="email@example.com" required>
+        </label>
+        <label>Hasło
+          <input type="password" name="password" placeholder="Hasło" required>
+        </label>
+        <button class="btn" type="submit">Zaloguj się</button>
+      </form>
+      <p id="msg" class="msg"></p>
+      <p class="row-links"><a href="/pages/register.html">Nie masz konta? Zarejestruj się</a></p>
+    </div>
+  </main>
+
+  <footer class="footer"><a class="js-policy" href="#">Polityka prywatności</a></footer>
+
+  <script src="/js/policy.js"></script>
+  <script src="/js/auth-layout.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    const msg = document.getElementById('msg');
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg';
+      try {
+        const r = await api('/auth/login', 'POST', {
+          email: e.target.email.value,
+          password: e.target.password.value
+        });
+        if (r.step === 'otp') {
+          location.href = '/pages/verify-otp.html';
+        } else if (r.step === 'setup') {
+          location.href = '/pages/setup-2fa.html';
+        }
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

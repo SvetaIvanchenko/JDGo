@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Konfiguracja 2FA — JDGo</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/pages/auth.html">JDGo</a></header>
+
+  <main class="page">
+    <div class="card">
+      <h1>Konfiguracja 2FA</h1>
+      <p class="lead">Zeskanuj kod QR aplikacją uwierzytelniającą (np. Google
+        Authenticator), a następnie wpisz wygenerowany kod, aby dokończyć rejestrację.</p>
+      <img id="qr" class="qr" alt="Kod QR do przywiązania aplikacji 2FA">
+      <form id="form">
+        <label>Kod z aplikacji
+          <input type="text" name="token" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                 placeholder="6 cyfr" required>
+        </label>
+        <button class="btn" type="submit">Potwierdź i zakończ</button>
+      </form>
+      <p id="msg" class="msg"></p>
+    </div>
+  </main>
+
+  <footer class="footer"><a class="js-policy" href="#">Polityka prywatności</a></footer>
+
+  <script src="/js/policy.js"></script>
+  <script src="/js/auth-layout.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    const msg = document.getElementById('msg');
+    (async () => {
+      try {
+        const r = await api('/auth/2fa/qr');
+        document.getElementById('qr').src = r.qr;
+      } catch (err) {
+        location.href = '/pages/auth.html';
+      }
+    })();
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg';
+      try {
+        await api('/auth/2fa/confirm', 'POST', { token: e.target.token.value });
+        msg.className = 'msg ok';
+        msg.textContent = 'Gotowe! Możesz się zalogować.';
+        setTimeout(() => location.href = '/pages/auth.html', 1200);
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

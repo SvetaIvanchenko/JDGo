@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rejestracja — JDGo</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/pages/auth.html">JDGo</a></header>
+
+  <main class="page">
+    <div class="card">
+      <h1>Rejestracja</h1>
+      <p class="lead">Załóż konto, aby prowadzić ewidencję.</p>
+      <form id="form">
+        <label>Adres e-mail
+          <input type="email" name="email" placeholder="email@example.com" required>
+        </label>
+        <label>Hasło
+          <input type="password" name="password" placeholder="min. 10 znaków" minlength="10" required>
+        </label>
+        <div class="consent">
+          <input type="checkbox" name="terms" id="terms" required>
+          <label for="terms" style="font-size:0.88rem;color:var(--ink)">
+            Zapoznałam/-em się i akceptuję
+            <a class="js-policy" href="#">Politykę prywatności</a> (RODO)
+          </label>
+        </div>
+        <button class="btn" type="submit">Zarejestruj się</button>
+      </form>
+      <p id="msg" class="msg"></p>
+      <p class="row-links"><a href="/pages/login.html">Masz już konto? Zaloguj się</a></p>
+    </div>
+  </main>
+
+  <footer class="footer"><a class="js-policy" href="#">Polityka prywatności</a></footer>
+
+  <script src="/js/policy.js"></script>
+  <script src="/js/auth-layout.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/password.js"></script>
+  <script>
+    const msg = document.getElementById('msg');
+    enhancePassword(document.querySelector('input[name="password"]'), true);
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg';
+      const f = e.target;
+      if (!passwordValid(f.password.value)) {
+        msg.textContent = 'Hasło nie spełnia wymagań (min. 10 znaków, wielka litera, cyfra, znak specjalny)';
+        return;
+      }
+      try {
+        await api('/auth/register', 'POST', {
+          email: f.email.value,
+          password: f.password.value,
+          terms_accepted: f.terms.checked
+        });
+        location.href = '/pages/setup-2fa.html';
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>
