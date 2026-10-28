@@ -81,9 +81,16 @@
       reader.readAsText(file, 'UTF-8');
     });
 
+    function validDate(s) {
+      s = String(s || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+      const [y, m, d] = s.split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+    }
     function rowValid(r) {
       if (r.type !== 'przychod' && r.type !== 'koszt') return false;
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(r.operation_date.trim())) return false;
+      if (!validDate(r.operation_date)) return false;
       if (!(STAWKI.indexOf(r.stawka) >= 0)) return false;
       const n = Number(String(r.amount_net).replace(',', '.'));
       return Number.isFinite(n) && n >= 0;

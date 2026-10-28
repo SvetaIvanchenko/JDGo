@@ -1022,6 +1022,7 @@ DECLARE
   v_uid BIGINT := f_current_uid();
   r JSONB; i INT := 0; imported INT := 0; errs JSONB := '[]'::jsonb; err TEXT;
   v_type TEXT; v_date TEXT; v_net NUMERIC; v_code TEXT; v_cur TEXT; v_cname TEXT; v_cid BIGINT; v_vat SMALLINT;
+  v_dt DATE;
 BEGIN
   IF v_uid IS NULL THEN RAISE EXCEPTION 'Brak kontekstu użytkownika' USING ERRCODE = 'P0001'; END IF;
   IF jsonb_typeof(p_rows) <> 'array' OR jsonb_array_length(p_rows) = 0 THEN
@@ -1030,37 +1031,46 @@ BEGIN
   IF jsonb_array_length(p_rows) > 1000 THEN RAISE EXCEPTION 'Zbyt wiele wierszy (max 1000)' USING ERRCODE = 'P0001'; END IF;
 
   FOR r IN SELECT value FROM jsonb_array_elements(p_rows) LOOP
-    err := NULL; v_vat := NULL; v_cid := NULL;
-    v_type  := trim(coalesce(r->>'type', ''));
-    v_date  := trim(coalesce(r->>'operation_date', ''));
-    v_code  := trim(coalesce(r->>'stawka', '23'));
-    v_cur   := upper(trim(coalesce(r->>'waluta', 'PLN')));
-    v_cname := trim(coalesce(r->>'contractor', ''));
-    BEGIN v_net := replace(coalesce(r->>'amount_net',''), ',', '.')::numeric;
-    EXCEPTION WHEN others THEN v_net := NULL; END;
+    err := NULL; v_vat := NULL; v_cid := NULL; v_dt := NULL;
+    BEGIN
+      v_type  := trim(coalesce(r->>'type', ''));
+      v_date  := trim(coalesce(r->>'operation_date', ''));
+      v_code  := trim(coalesce(r->>'stawka', '23'));
+      v_cur   := upper(trim(coalesce(r->>'waluta', 'PLN')));
+      v_cname := trim(coalesce(r->>'contractor', ''));
+      BEGIN v_net := replace(coalesce(r->>'amount_net',''), ',', '.')::numeric;
+      EXCEPTION WHEN others THEN v_net := NULL; END;
 
-    IF v_type NOT IN ('przychod','koszt') THEN err := 'typ musi być przychod/koszt';
-    ELSIF v_date !~ '^\d{4}-\d{2}-\d{2}$' THEN err := 'data w formacie RRRR-MM-DD';
-    ELSIF v_net IS NULL OR v_net < 0 THEN err := 'nieprawidłowa kwota netto';
-    ELSIF v_cur !~ '^[A-Z]{3}$' THEN err := 'nieprawidłowy kod waluty';
-    ELSE
-      SELECT id INTO v_vat FROM vat_rates WHERE code = v_code;
-      IF v_vat IS NULL THEN err := 'nieprawidłowa stawka VAT'; END IF;
-    END IF;
-
-    IF err IS NULL THEN
-      IF v_cname <> '' THEN
-        SELECT id INTO v_cid FROM contractors WHERE user_id = v_uid AND lower(name) = lower(v_cname) LIMIT 1;
+      -- data: format RRRR-MM-DD oraz rzeczywista poprawność kalendarzowa
+      IF v_date ~ '^\d{4}-\d{2}-\d{2}$' THEN
+        BEGIN v_dt := v_date::date; EXCEPTION WHEN others THEN v_dt := NULL; END;
       END IF;
-      INSERT INTO operations (user_id, contractor_id, type, operation_date, category, description,
-                              currency, vat_rate_id, amount_net, source)
-      VALUES (v_uid, v_cid, v_type::operation_type, v_date::date,
-              nullif(trim(coalesce(r->>'category','')),''), nullif(trim(coalesce(r->>'description','')),''),
-              v_cur, v_vat, v_net, 'csv');
-      imported := imported + 1;
-    ELSE
-      errs := errs || jsonb_build_object('index', i, 'error', err);
-    END IF;
+
+      IF v_type NOT IN ('przychod','koszt') THEN err := 'typ musi być przychod/koszt';
+      ELSIF v_dt IS NULL THEN err := 'nieprawidłowa data (RRRR-MM-DD)';
+      ELSIF v_net IS NULL OR v_net < 0 THEN err := 'nieprawidłowa kwota netto';
+      ELSIF v_cur !~ '^[A-Z]{3}$' THEN err := 'nieprawidłowy kod waluty';
+      ELSE
+        SELECT id INTO v_vat FROM vat_rates WHERE code = v_code;
+        IF v_vat IS NULL THEN err := 'nieprawidłowa stawka VAT'; END IF;
+      END IF;
+
+      IF err IS NULL THEN
+        IF v_cname <> '' THEN
+          SELECT id INTO v_cid FROM contractors WHERE user_id = v_uid AND lower(name) = lower(v_cname) LIMIT 1;
+        END IF;
+        INSERT INTO operations (user_id, contractor_id, type, operation_date, category, description,
+                                currency, vat_rate_id, amount_net, source)
+        VALUES (v_uid, v_cid, v_type::operation_type, v_dt,
+                nullif(trim(coalesce(r->>'category','')),''), nullif(trim(coalesce(r->>'description','')),''),
+                v_cur, v_vat, v_net, 'csv');
+        imported := imported + 1;
+      ELSE
+        errs := errs || jsonb_build_object('index', i, 'error', err);
+      END IF;
+    EXCEPTION WHEN others THEN
+      errs := errs || jsonb_build_object('index', i, 'error', 'wiersz odrzucony: ' || SQLERRM);
+    END;
     i := i + 1;
   END LOOP;
 
