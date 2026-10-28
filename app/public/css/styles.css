@@ -570,6 +570,19 @@ body { transition: background-color 0.25s ease, color 0.2s ease; }
 .route-progress::before { content: ''; display: block; height: 100%; width: 0; background: var(--green); animation: routeBar 0.9s ease-out forwards; }
 @keyframes routeBar { 0% { width: 0; opacity: 1; } 70% { width: 86%; opacity: 1; } 100% { width: 100%; opacity: 0; } }
 
+/* Ekran ładowania (nakładka) przy przełączaniu stron */
+.app-loader {
+  position: fixed; inset: 0; z-index: 4000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(244, 245, 246, 0.82);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  opacity: 0; visibility: hidden; transition: opacity 0.18s ease;
+}
+.app-loader.show { opacity: 1; visibility: visible; }
+.spinner.lg { width: 34px; height: 34px; border-width: 3px; }
+@media (prefers-reduced-motion: reduce) { .app-loader { transition: none; } }
+
 /* ===== Zaznaczanie wierszy + pasek akcji zbiorczych ===== */
 .data-table td.sel, .data-table th.sel { width: 36px; text-align: center; padding-left: 10px; padding-right: 0; }
 .row-check, .filter-row .sel { accent-color: var(--green); width: 15px; height: 15px; cursor: pointer; }

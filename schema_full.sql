@@ -1181,6 +1181,16 @@ BEGIN
   END IF;
 END $$;
 
+-- Tabela sesji dla connect-pg-simple (express-session w PostgreSQL).
+-- Sesje przeżywają restart serwera (ważne na hostingu usypiającym instancję).
+-- Bez RLS — zarządza nią warstwa sesji aplikacji.
+CREATE TABLE IF NOT EXISTS session (
+  sid    VARCHAR PRIMARY KEY,
+  sess   JSON NOT NULL,
+  expire TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_session_expire ON session (expire);
+
 GRANT USAGE ON SCHEMA public TO jdg_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO jdg_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO jdg_app;

@@ -2,7 +2,9 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 const path = require('path');
+const pool = require('./src/db');
 
 const app = express();
 app.set('trust proxy', 1); // za odwrotnym proxy (np. Render) — poprawny req.ip dla rate limitingu
@@ -14,6 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 // Sesja w ciasteczku (WN-1: httpOnly, SameSite; secure=true dopiero przy HTTPS)
 // rolling: true — czas bezczynności resetuje się przy każdej aktywności (WF-4).
 app.use(session({
+  // Sesje trzymane w PostgreSQL (tabela "session") — przeżywają restart serwera
+  // (ważne na hostingu, który usypia instancję). createTableIfMissing=false:
+  // tabelę tworzy schemat bazy (rola aplikacyjna nie ma uprawnień do CREATE TABLE).
+  store: new pgSession({ pool, tableName: 'session', createTableIfMissing: false }),
   secret: process.env.SESSION_SECRET || 'dev-secret-zmien-mnie',
   resave: false,
   saveUninitialized: false,

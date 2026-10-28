@@ -40,6 +40,29 @@
   const norm = (p) => (p === '/index.html' ? '/' : p);
   const current = norm(location.pathname);
 
+  // ——— Ekran ładowania przy przełączaniu stron (miękkie przejścia) ———
+  function setupLoader() {
+    const host = document.body || document.documentElement;
+    const loader = document.createElement('div');
+    loader.className = 'app-loader';
+    loader.innerHTML = '<span class="spinner lg"></span>';
+    host.appendChild(loader);
+    const show = () => loader.classList.add('show');
+    const hide = () => loader.classList.remove('show');
+    show(); // widoczny podczas wczytywania bieżącej strony
+    window.addEventListener('load', () => setTimeout(hide, 120));
+    window.addEventListener('pageshow', hide);         // powrót z bufora (wstecz/dalej)
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href]');
+      if (!a) return;
+      const href = a.getAttribute('href') || '';
+      if (a.target === '_blank' || /^(#|https?:|mailto:|tel:)/.test(href)) return;
+      show(); // przejście do innej strony wewnętrznej
+    });
+  }
+  if (document.body) setupLoader();
+  else document.addEventListener('DOMContentLoaded', setupLoader);
+
   function build() {
     const app = document.getElementById('app');
     if (!app) return;
