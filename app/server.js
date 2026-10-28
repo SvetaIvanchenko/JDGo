@@ -21,7 +21,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false,                 // ustaw true w produkcji (HTTPS)
+    secure: process.env.NODE_ENV === 'production',  // HTTPS w produkcji (Railway); false lokalnie
     maxAge: 1000 * 60 * 30         // 30 min bezczynności (WF-4)
   }
 }));
