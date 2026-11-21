@@ -126,7 +126,8 @@
         ];
         // Składki ZUS za poprzedni miesiąc — termin do 20. bieżącego miesiąca.
         const zus = window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe,
-          form: zusCfg.form, income: prev ? prev.wynik_net : 0 });
+          form: zusCfg.form, income: prev ? prev.wynik_net : 0,
+          revenue: prev ? Number(prev.income.net) * 12 : 0 });
         if (zus.configured) rows.push({ label: 'Składki ZUS', amount: zus.total, date: new Date(Date.UTC(y, mo, 20)) });
         document.getElementById('taxList').innerHTML = rows.map((r) => {
           const dl = daysLeft(r.date);
@@ -227,7 +228,7 @@
                 const nowYm = new Date().toISOString().slice(0, 7);
                 if (ym > nowYm) return 0; // przyszłe miesiące — jeszcze nie płacone
                 const doch = Number(x.przychod) - Number(x.koszt);
-                return window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe, form: zusCfg.form, income: doch }).total;
+                return window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe, form: zusCfg.form, income: doch, revenue: Number(x.przychod) * 12 }).total;
               }),
               backgroundColor: '#6b7280'
             }] : [])

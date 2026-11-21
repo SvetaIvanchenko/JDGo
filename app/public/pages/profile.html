@@ -63,7 +63,11 @@
                 <select name="tax_form">
                   <option value="skala">Skala podatkowa (12% / 32%)</option>
                   <option value="liniowy">Podatek liniowy (19%)</option>
+                  <option value="ryczalt">Ryczałt ewidencjonowany</option>
                 </select>
+              </label>
+              <label id="ryczaltRateWrap" style="display:none">Stawka ryczałtu (%)
+                <input type="number" name="ryczalt_rate" step="0.5" min="0" max="50" placeholder="12">
               </label>
               <label>Domyślna waluta
                 <input type="text" name="default_currency" maxlength="3" placeholder="PLN">
@@ -241,7 +245,8 @@
         tax_form: F.tax_form.value,
         default_currency: F.default_currency.value,
         zus_scheme: F.zus_scheme.value,
-        zus_chorobowe: F.zus_chorobowe.checked
+        zus_chorobowe: F.zus_chorobowe.checked,
+        ryczalt_rate: F.ryczalt_rate.value
       };
     }
 
@@ -256,6 +261,8 @@
         F.default_currency.value = p.default_currency;
         F.zus_scheme.value = p.zus_scheme || 'pelny';
         F.zus_chorobowe.checked = !!p.zus_chorobowe;
+        F.ryczalt_rate.value = p.ryczalt_rate != null ? p.ryczalt_rate : 12;
+        toggleRyczalt();
         document.getElementById('phName').textContent = p.display_name || p.email;
         document.getElementById('phEmail').textContent = p.email;
         document.getElementById('phUpdated').textContent = p.updated_at || '—';
@@ -331,8 +338,12 @@
       } catch (err) { twofaMsg.textContent = err.message; }
     });
 
+    function toggleRyczalt() {
+      document.getElementById('ryczaltRateWrap').style.display = F.tax_form.value === 'ryczalt' ? '' : 'none';
+    }
     form.addEventListener('input', updateSummary);
     form.addEventListener('change', updateSummary);
+    F.tax_form.addEventListener('change', toggleRyczalt);
 
     // Anuluj — przywróć wartości sprzed edycji
     document.getElementById('pCancel').addEventListener('click', () => {
@@ -343,6 +354,8 @@
       F.default_currency.value = snapshot.default_currency || '';
       F.zus_scheme.value = snapshot.zus_scheme || 'pelny';
       F.zus_chorobowe.checked = !!snapshot.zus_chorobowe;
+      F.ryczalt_rate.value = snapshot.ryczalt_rate != null ? snapshot.ryczalt_rate : 12;
+      toggleRyczalt();
       updateSummary();
       msgProfile.className = 'msg'; msgProfile.textContent = '';
     });
@@ -359,7 +372,8 @@
           tax_form: F.tax_form.value,
           default_currency: F.default_currency.value,
           zus_scheme: F.zus_scheme.value,
-          zus_chorobowe: F.zus_chorobowe.checked
+          zus_chorobowe: F.zus_chorobowe.checked,
+          ryczalt_rate: F.ryczalt_rate.value
         });
         msgProfile.className = 'msg ok';
         msgProfile.textContent = 'Zapisano.';

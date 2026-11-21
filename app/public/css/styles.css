@@ -662,6 +662,19 @@ body { transition: background-color 0.25s ease, color 0.2s ease; }
 .zus-total td { border-top: 2px solid var(--line-strong); font-size: 1.02rem; }
 .zus-total td:last-child { color: var(--green); }
 
+/* Rozkład dochodu "na rękę" (zestawienia) */
+.net-take { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; margin-top: 14px; }
+.net-bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: var(--input-bg); }
+.net-bar .seg { height: 100%; }
+.net-bar .seg.zus { background: #6b7280; }
+.net-bar .seg.pit { background: #d97706; }
+.net-bar .seg.net { background: var(--green); }
+.net-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: 0.88rem; color: var(--ink); }
+.net-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.net-legend .dot.zus { background: #6b7280; }
+.net-legend .dot.pit { background: #d97706; }
+.net-legend .dot.net { background: var(--green); }
+
 /* ===== Menu akcji w wierszu (▾) — faktury / kontrahenci ===== */
 .row-menu-btn { background: none; border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; padding: 4px 8px; line-height: 1; }
 .row-menu-btn:hover { background: var(--hover); color: var(--ink); border-color: var(--line); }

@@ -60,8 +60,29 @@
         '<div class="metric"><div class="label">Zaliczka PIT</div><div class="value">' + money(s.pit) + '</div></div>' +
         '</div>' +
         (function () {
-          const z = window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe, form: zusCfg.form, income: Number(s.wynik_net) });
-          return z.configured ? '<div class="metrics"><div class="metric"><div class="label">Składki ZUS (mies.)</div><div class="value">' + money(z.total) + '</div></div></div>' : '';
+          const fv = document.getElementById('rFrom').value, tv = document.getElementById('rTo').value;
+          let months = 1;
+          if (fv && tv) { const a = new Date(fv), b = new Date(tv); months = Math.max(1, (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth()) + 1); }
+          const revenue = (Number(s.income.net) / months) * 12;
+          const z = window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe, form: zusCfg.form, income: Number(s.wynik_net) / months, revenue: revenue });
+          const zusPeriod = z.configured ? z.total * months : 0;
+          const pit = Number(s.pit);
+          const naReke = Number(s.wynik_net) - pit - zusPeriod;
+          const baseTot = Math.max(Number(s.wynik_net), 0.01);
+          const w = (v) => Math.max(0, Math.min(100, v / baseTot * 100));
+          const seg = (cls, v) => v > 0 ? '<div class="seg ' + cls + '" style="width:' + w(v) + '%"></div>' : '';
+          const bar = Number(s.wynik_net) > 0 ? '<div class="net-bar">' + seg('zus', zusPeriod) + seg('pit', pit) + seg('net', naReke) + '</div>' : '';
+          const zusCard = z.configured ? '<div class="metric"><div class="label">Składki ZUS (' + months + ' mies.)</div><div class="value">' + money(zusPeriod) + '</div></div>' : '';
+          return '<div class="metrics">' + zusCard +
+            '<div class="metric"><div class="label">Na rękę (szac.)</div><div class="value">' + money(naReke) + '</div></div></div>' +
+            '<div class="net-take">' + bar +
+              '<div class="net-legend">' +
+                (z.configured ? '<span><i class="dot zus"></i>Składki ZUS · ' + money(zusPeriod) + '</span>' : '') +
+                '<span><i class="dot pit"></i>Zaliczka PIT · ' + money(pit) + '</span>' +
+                '<span><i class="dot net"></i>Na rękę · ' + money(naReke) + '</span>' +
+              '</div>' +
+              '<p class="page-sub" style="margin-top:8px">Szacunek: dochód − zaliczka PIT − składki ZUS. VAT pominięty (neutralny — pobierany od klienta i odprowadzany do US).</p>' +
+            '</div>';
         })();
 
       let table;

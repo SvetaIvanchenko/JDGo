@@ -440,7 +440,11 @@
     'Preferencyjne składki': 'Preferential contributions',
     'Ulga na start': 'Relief at start',
     'Brak / nie dotyczy': 'None / N/A',
-    'Dobrowolne chorobowe (ZUS)': 'Voluntary sickness (ZUS)'
+    'Dobrowolne chorobowe (ZUS)': 'Voluntary sickness (ZUS)',
+    'Ryczałt ewidencjonowany': 'Lump-sum tax (ryczałt)',
+    'Stawka ryczałtu (%)': 'Lump-sum rate (%)',
+    'Na rękę (szac.)': 'Take-home (est.)',
+    'Szacunek: dochód − zaliczka PIT − składki ZUS. VAT pominięty (neutralny — pobierany od klienta i odprowadzany do US).': 'Estimate: income − PIT advance − ZUS contributions. VAT omitted (neutral — collected from clients and remitted to the tax office).'
   };
 
   window.t = function (pl) {
