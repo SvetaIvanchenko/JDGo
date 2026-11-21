@@ -120,4 +120,27 @@ function sendLoginCode(to, code) {
   });
 }
 
-module.exports = { sendMail, sendRecovery, sendLoginCode, APP_URL };
+// Przypomnienie o zbliżających się terminach (ZUS / PIT / VAT).
+function sendReminder(to, items, appUrl) {
+  const font = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+  const url = (appUrl || APP_URL) + '/';
+  const rows = items.map((i) =>
+    `<tr><td style="padding:8px 0;border-bottom:1px solid #eef0f2;font-family:${font};font-size:14px;color:#15181b">${i.label}</td>` +
+    `<td style="padding:8px 0;border-bottom:1px solid #eef0f2;text-align:right;font-family:${font};font-size:14px;color:#15663b;font-weight:600">do ${i.due}</td></tr>`).join('');
+  const body = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px">${rows}</table>` +
+    `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#15663b" style="border-radius:8px">` +
+    `<a href="${url}" target="_blank" style="display:inline-block;padding:13px 28px;font-family:${font};font-size:15px;font-weight:600;color:#fff;text-decoration:none;border-radius:8px">Otwórz JDGo</a>` +
+    `</td></tr></table>`;
+  return sendMail({
+    to, subject: 'Przypomnienie o terminach podatkowych — JDGo',
+    devInfo: 'TERMINY: ' + items.map((i) => i.label + ' do ' + i.due).join(', '),
+    html: shell({
+      title: 'Zbliżają się terminy',
+      intro: 'Przypominamy o nadchodzących terminach płatności. Kwoty sprawdzisz w aplikacji.',
+      bodyHtml: body,
+      note: 'Wiadomość informacyjna — nie uwzględnia ewentualnych nadpłat ani zwolnień.'
+    })
+  });
+}
+
+module.exports = { sendMail, sendRecovery, sendLoginCode, sendReminder, APP_URL };
