@@ -171,7 +171,8 @@
         try { render(await api('/search?q=' + encodeURIComponent(q))); } catch (e) { dd.classList.remove('open'); }
       }
       input.addEventListener('input', () => { clearTimeout(h); h = setTimeout(run, 250); });
-      input.addEventListener('focus', () => { if (input.value.trim().length >= 2) run(); });
+      input.addEventListener('focus', () => { header.classList.add('search-active'); if (input.value.trim().length >= 2) run(); });
+      input.addEventListener('blur', () => { setTimeout(() => { if (!input.value.trim()) header.classList.remove('search-active'); }, 150); });
       input.addEventListener('keydown', (e) => { if (e.key === 'Escape') dd.classList.remove('open'); });
       document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) dd.classList.remove('open'); });
     })();
