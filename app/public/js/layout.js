@@ -103,6 +103,7 @@
       '<div id="searchDropdown" class="search-dd"></div></div>' +
       '<div class="header-right">' +
       '<div class="user-menu"><button class="user-btn" id="userBtn" type="button">' +
+      '<span class="user-avatar" id="userAvatar">··</span>' +
       '<span class="user-name" id="userName">…</span><span class="chev">&#9662;</span></button>' +
       '<div class="user-dd" id="userDd">' +
       '<a href="/pages/profile.html">' + ic('user', 'dd-ic') + 'Profil</a>' +
@@ -137,7 +138,7 @@
     document.addEventListener('click', (e) => { if (!header.querySelector('.user-menu').contains(e.target)) userDd.classList.remove('open'); });
     header.querySelector('#userLogout').addEventListener('click', async () => {
       try { await api('/auth/logout', 'POST'); } catch (e) { /* ignore */ }
-      location.href = '/pages/auth.html';
+      location.href = '/auth';
     });
 
     // globalne wyszukiwanie (styl Jira/Confluence)
@@ -177,8 +178,14 @@
 
     // ochrona: strona dostepna tylko po zalogowaniu; przy okazji nazwa uzytkownika w menu
     api('/profile')
-      .then((p) => { header.querySelector('#userName').textContent = p.display_name || p.email || 'Konto'; })
-      .catch(() => { location.href = '/pages/auth.html'; });
+      .then((p) => {
+        const nm = p.display_name || p.email || 'Konto';
+        header.querySelector('#userName').textContent = nm;
+        const parts = (p.display_name || '').trim().split(/\s+/).filter(Boolean);
+        const ini = parts.length >= 2 ? (parts[0][0] + parts[1][0]) : (nm[0] || '?');
+        header.querySelector('#userAvatar').textContent = ini.toUpperCase();
+      })
+      .catch(() => { location.href = '/auth'; });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);

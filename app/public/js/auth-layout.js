@@ -23,7 +23,7 @@
     split.className = 'auth-split';
     split.innerHTML =
       '<aside class="auth-hero"><div class="auth-hero-inner">' +
-        '<a class="brand-side" href="/pages/auth.html">JDG<span>o</span></a>' +
+        '<a class="brand-side" href="/auth">JDG<span>o</span></a>' +
         '<h2 class="auth-hero-title">Ewidencja przychodów, kosztów i faktur dla JDG</h2>' +
         '<p class="auth-hero-sub">Prosty system do prowadzenia działalności — operacje, kontrahenci, faktury i rozliczenia w jednym miejscu.</p>' +
         '<ul class="auth-feats">' +

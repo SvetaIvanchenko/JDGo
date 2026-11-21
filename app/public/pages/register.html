@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="/pages/auth.html">JDGo</a></header>
+  <header class="topbar"><a class="brand" href="/auth">JDGo</a></header>
 
   <main class="page">
     <div class="card">
@@ -58,7 +58,9 @@
           password: f.password.value,
           terms_accepted: f.terms.checked
         });
-        location.href = '/pages/setup-2fa.html';
+        msg.className = 'msg ok';
+        msg.textContent = 'Konto utworzone. Przekierowanie do logowania…';
+        setTimeout(() => location.href = '/pages/login.html', 1000);
       } catch (err) {
         msg.textContent = err.message;
       }

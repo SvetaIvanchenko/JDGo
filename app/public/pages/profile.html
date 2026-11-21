@@ -157,6 +157,34 @@
       <div class="profile-cols">
         <h3 class="konto-title">Konto</h3>
         <p class="konto-2fa">Uwierzytelnianie dwuetapowe (2FA): <span id="twofaStatus">—</span> <span class="pill ok" id="twofaPill">—</span></p>
+        <p class="konto-2fa" style="color:var(--muted);font-size:0.88rem;margin-top:-4px">Opcjonalne. Bez niego logowanie potwierdzasz jednorazowym kodem z e-maila.</p>
+
+        <button class="btn btn-outline" id="twofaEnableBtn" type="button" style="display:none">Włącz 2FA (aplikacja)</button>
+        <button class="btn btn-outline" id="twofaRebindBtn" type="button" style="display:none">Przepnij aplikację (nowy kod QR)</button>
+        <button class="btn btn-outline" id="twofaDisableBtn" type="button" style="display:none">Wyłącz 2FA</button>
+
+        <!-- Włączanie: QR + kod -->
+        <div id="twofaEnableBox" style="display:none;margin-top:14px">
+          <p class="lead" style="margin:0 0 10px">Zeskanuj kod QR aplikacją uwierzytelniającą (np. Google Authenticator) i wpisz wygenerowany kod.</p>
+          <img id="twofaQr" class="qr" alt="Kod QR 2FA" style="max-width:180px;display:block;margin-bottom:12px">
+          <form id="twofaActivateForm" style="gap:10px">
+            <label>Kod z aplikacji
+              <input type="text" name="token" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6 cyfr" required>
+            </label>
+            <button class="btn" type="submit" style="min-width:auto">Aktywuj 2FA</button>
+          </form>
+        </div>
+
+        <!-- Wyłączanie: hasło -->
+        <div id="twofaDisableBox" style="display:none;margin-top:14px">
+          <form id="twofaDisableForm" style="gap:10px">
+            <label>Potwierdź hasłem
+              <input type="password" name="password" placeholder="Twoje hasło" required>
+            </label>
+            <button class="btn btn-danger" type="submit" style="min-width:auto">Wyłącz 2FA</button>
+          </form>
+        </div>
+        <p id="twofaMsg" class="msg" style="margin-top:8px"></p>
         <button class="btn btn-outline" id="exportData">
           <svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m16 6-4 4-4-4"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 18h.01"/><path d="M10 18h.01"/></svg>
           Pobierz moje dane (RODO)
@@ -241,11 +269,52 @@
         document.getElementById('secLevelDesc').textContent = enabled
           ? 'Twoje konto jest odpowiednio chronione.' : 'Włącz 2FA, aby zwiększyć bezpieczeństwo.';
 
+        // Przyciski włącz/wyłącz 2FA
+        document.getElementById('twofaEnableBtn').style.display = enabled ? 'none' : 'inline-flex';
+        document.getElementById('twofaRebindBtn').style.display = enabled ? 'inline-flex' : 'none';
+        document.getElementById('twofaDisableBtn').style.display = enabled ? 'inline-flex' : 'none';
+        document.getElementById('twofaEnableBox').style.display = 'none';
+        document.getElementById('twofaDisableBox').style.display = 'none';
+
         updateSummary();
         takeSnapshot();
       } catch (err) { /* layout.js przekieruje do logowania */ }
     }
     load();
+
+    // ——— Włączanie / wyłączanie 2FA (opcjonalne) ———
+    const twofaMsg = document.getElementById('twofaMsg');
+    async function startTwofaSetup(rebind) {
+      twofaMsg.className = 'msg';
+      try {
+        const r = await api('/auth/2fa/setup', 'POST');
+        document.getElementById('twofaQr').src = r.qr;
+        document.getElementById('twofaEnableBox').style.display = 'block';
+        document.getElementById('twofaDisableBox').style.display = 'none';
+        if (rebind) { twofaMsg.className = 'msg'; twofaMsg.textContent = 'Zeskanuj nowy kod QR i potwierdź, aby przepiąć aplikację.'; }
+      } catch (err) { twofaMsg.textContent = err.message; }
+    }
+    document.getElementById('twofaEnableBtn').addEventListener('click', () => startTwofaSetup(false));
+    document.getElementById('twofaRebindBtn').addEventListener('click', () => startTwofaSetup(true));
+    document.getElementById('twofaActivateForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); twofaMsg.className = 'msg';
+      try {
+        await api('/auth/2fa/activate', 'POST', { token: e.target.token.value });
+        twofaMsg.className = 'msg ok'; twofaMsg.textContent = 'Uwierzytelnianie dwuetapowe włączone.';
+        load();
+      } catch (err) { twofaMsg.textContent = err.message; }
+    });
+    document.getElementById('twofaDisableBtn').addEventListener('click', () => {
+      document.getElementById('twofaDisableBox').style.display = 'block';
+    });
+    document.getElementById('twofaDisableForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); twofaMsg.className = 'msg';
+      try {
+        await api('/auth/2fa/disable', 'POST', { password: e.target.password.value });
+        twofaMsg.className = 'msg ok'; twofaMsg.textContent = 'Uwierzytelnianie dwuetapowe wyłączone.';
+        e.target.reset(); load();
+      } catch (err) { twofaMsg.textContent = err.message; }
+    });
 
     form.addEventListener('input', updateSummary);
     form.addEventListener('change', updateSummary);
@@ -334,7 +403,7 @@
     document.getElementById('deleteAccount').addEventListener('click', async () => {
       if (!confirm('Na pewno trwale usunąć konto i wszystkie dane?')) return;
       await api('/auth/account', 'DELETE');
-      location.href = '/pages/auth.html';
+      location.href = '/auth';
     });
   </script>
 </body>

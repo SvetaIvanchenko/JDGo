@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="/pages/auth.html">JDGo</a></header>
+  <header class="topbar"><a class="brand" href="/auth">JDGo</a></header>
 
   <main class="page">
     <div class="card">
@@ -45,9 +45,7 @@
           password: e.target.password.value
         });
         if (r.step === 'otp') {
-          location.href = '/pages/verify-otp.html';
-        } else if (r.step === 'setup') {
-          location.href = '/pages/setup-2fa.html';
+          location.href = '/pages/verify-otp.html?totp=' + (r.totp ? '1' : '0');
         }
       } catch (err) {
         msg.textContent = err.message;

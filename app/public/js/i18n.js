@@ -10,6 +10,13 @@
   var THEME = localStorage.getItem('jdgo_theme') || 'light';
   document.documentElement.setAttribute('data-theme', THEME);
 
+  // Favicon (ikona karty) — wstrzyknięta raz, obecna na wszystkich stronach.
+  if (!document.querySelector('link[rel="icon"]')) {
+    var fav = document.createElement('link');
+    fav.rel = 'icon'; fav.type = 'image/svg+xml'; fav.href = '/favicon.svg';
+    document.head.appendChild(fav);
+  }
+
   var DICT = {
     // — Nawigacja / layout —
     'Pulpit': 'Dashboard',
@@ -376,7 +383,38 @@
     'Wystapil blad': 'An error occurred',
     'Zmieniono status': 'Status changed',
     'Razem netto': 'Total net',
-    'Razem': 'Total'
+    'Razem': 'Total',
+
+    // — Logowanie / 2FA / e-mail (dodane) —
+    'Weryfikacja logowania': 'Login verification',
+    'Kod z e-maila': 'Code from e-mail',
+    'Nie masz dostępu do aplikacji?': 'No access to the app?',
+    'Wyślij kod na e-mail': 'Send a code to e-mail',
+    'Wyślij kod ponownie': 'Resend code',
+    'Wysłaliśmy 6-cyfrowy kod na Twój e-mail. Wpisz go poniżej.': 'We sent a 6-digit code to your e-mail. Enter it below.',
+    'Nie pamiętasz hasła?': 'Forgot your password?',
+    'Podaj adres e-mail — wyślemy link do jednorazowego logowania. Po zalogowaniu zmienisz hasło w ustawieniach konta.': 'Enter your e-mail — we will send a one-time sign-in link. After signing in, change your password in account settings.',
+    'Wyślij link': 'Send link',
+    'Jeśli konto istnieje, wysłaliśmy link do jednorazowego logowania. Sprawdź skrzynkę.': 'If the account exists, we have sent a one-time sign-in link. Check your inbox.',
+    'Wróć do logowania': 'Back to sign in',
+    'Odzyskiwanie dostępu': 'Account recovery',
+    'Weryfikacja linku…': 'Verifying the link…',
+    'Wejście dozwolone. Przekierowanie do konta — pamiętaj, aby zmienić hasło w ustawieniach.': 'Access granted. Redirecting to your account — remember to change your password in settings.',
+    'Brak tokenu w linku.': 'No token in the link.',
+    'Konto utworzone. Przekierowanie do logowania…': 'Account created. Redirecting to sign in…',
+
+    // — Profil: 2FA (dodane) —
+    'Opcjonalne. Bez niego logowanie potwierdzasz jednorazowym kodem z e-maila.': 'Optional. Without it, you confirm sign-in with a one-time e-mail code.',
+    'Włącz 2FA (aplikacja)': 'Enable 2FA (app)',
+    'Przepnij aplikację (nowy kod QR)': 'Re-link app (new QR code)',
+    'Wyłącz 2FA': 'Disable 2FA',
+    'Zeskanuj kod QR aplikacją uwierzytelniającą (np. Google Authenticator) i wpisz wygenerowany kod.': 'Scan the QR code with an authenticator app (e.g. Google Authenticator) and enter the generated code.',
+    'Aktywuj 2FA': 'Activate 2FA',
+    'Potwierdź hasłem': 'Confirm with password',
+    'Twoje hasło': 'Your password',
+    'Uwierzytelnianie dwuetapowe włączone.': 'Two-factor authentication enabled.',
+    'Uwierzytelnianie dwuetapowe wyłączone.': 'Two-factor authentication disabled.',
+    'Zeskanuj nowy kod QR i potwierdź, aby przepiąć aplikację.': 'Scan the new QR code and confirm to re-link the app.'
   };
 
   window.t = function (pl) {

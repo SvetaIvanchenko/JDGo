@@ -15,6 +15,9 @@ const mailer = require('../lib/mailer');
 const rateLimit = require('../middleware/rateLimit');
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Zbyt wiele prób. Spróbuj ponownie za 15 minut.' });
 
+// Tolerancja ±1 kroku (30 s) na rozjazd zegara między telefonem a serwerem.
+authenticator.options = { window: 1 };
+
 // Tokeny jednorazowe: losowy ciąg w linku, w bazie tylko jego hasz SHA-256.
 function newToken() {
   const raw = crypto.randomBytes(32).toString('hex');
@@ -31,8 +34,9 @@ function passwordPolicyError(pw) {
   return null;
 }
 
-// WF-1: rejestracja. Tworzy konto i od razu generuje sekret TOTP (2FA obowiazkowe).
-// Ustawia krotka sesje "setupUserId" pozwalajaca dokonczyc przywiazanie aplikacji.
+// WF-1: rejestracja (e-mail + hasło). 2FA aplikacją (TOTP) jest OPCJONALNE —
+// użytkownik może je włączyć później w ustawieniach. Drugim składnikiem przy
+// logowaniu jest domyślnie jednorazowy kod wysyłany na e-mail.
 router.post('/register', authLimiter, async (req, res) => {
   const { email, password, terms_accepted } = req.body;
   if (!email || !password) {
@@ -45,15 +49,12 @@ router.post('/register', authLimiter, async (req, res) => {
   }
   try {
     const hash = await bcrypt.hash(password, 12);          // WN-1
-    const secret = authenticator.generateSecret();         // sekret 2FA (WF-3)
-    const r = await pool.query(
+    await pool.query(
       `INSERT INTO users (email, password_hash, totp_secret, totp_enabled,
                           terms_accepted, terms_accepted_at)
-       VALUES ($1, $2, $3, FALSE, TRUE, now())
-       RETURNING id`,
-      [email, hash, encryptSecret(secret)]                 // WN-1: sekret 2FA szyfrowany AES-256-GCM
+       VALUES ($1, $2, NULL, FALSE, TRUE, now())`,
+      [email, hash]
     );
-    req.session.setupUserId = r.rows[0].id;                // sesja tylko do dokonczenia 2FA
     res.status(201).json({ ok: true });
   } catch (e) {
     if (e.code === '23505') {
@@ -64,43 +65,51 @@ router.post('/register', authLimiter, async (req, res) => {
   }
 });
 
-// WF-3: zwraca kod QR dla konta w trakcie konfiguracji 2FA (sesja setupUserId).
-router.get('/2fa/qr', async (req, res) => {
-  const id = req.session.setupUserId;
-  if (!id) return res.status(401).json({ error: 'Brak rozpoczetej rejestracji' });
+// WF-3 (opcjonalne): rozpoczęcie włączania 2FA aplikacją — generuje sekret i QR.
+// Dostępne po zalogowaniu (ustawienia konta). 2FA aktywuje się dopiero po /activate.
+router.post('/2fa/setup', requireAuth, async (req, res) => {
   try {
-    const r = await pool.query('SELECT email, totp_secret FROM users WHERE id = $1', [id]);
-    const secret = decryptSecret(r.rows[0].totp_secret);
-    const uri = authenticator.keyuri(r.rows[0].email, 'JDG Ewidencja', secret);
+    const secret = authenticator.generateSecret();
+    await pool.query('UPDATE users SET totp_secret = $1 WHERE id = $2',
+      [encryptSecret(secret), req.session.userId]);        // WN-1: szyfrowany AES-256-GCM
+    const r = await pool.query('SELECT email FROM users WHERE id = $1', [req.session.userId]);
+    const uri = authenticator.keyuri(r.rows[0].email, 'JDGo', secret);
     const qr = await qrcode.toDataURL(uri);
     res.json({ qr });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Blad serwera' });
-  }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Blad serwera' }); }
 });
 
-// WF-3: potwierdzenie przywiazania aplikacji pierwszym kodem -> wlaczenie 2FA.
-router.post('/2fa/confirm', authLimiter, async (req, res) => {
-  const id = req.session.setupUserId;
-  if (!id) return res.status(401).json({ error: 'Brak rozpoczetej rejestracji' });
+// WF-3 (opcjonalne): potwierdzenie pierwszym kodem -> włączenie 2FA.
+router.post('/2fa/activate', requireAuth, authLimiter, async (req, res) => {
   const { token } = req.body;
   try {
-    const r = await pool.query('SELECT totp_secret FROM users WHERE id = $1', [id]);
+    const r = await pool.query('SELECT totp_secret FROM users WHERE id = $1', [req.session.userId]);
+    if (!r.rows[0].totp_secret) return res.status(400).json({ error: 'Najpierw rozpocznij konfigurację 2FA' });
     const secret = decryptSecret(r.rows[0].totp_secret);
     if (!authenticator.verify({ token, secret })) {
-      return res.status(401).json({ error: 'Nieprawidlowy kod' });
+      return res.status(401).json({ error: 'Nieprawidłowy kod' });
     }
-    await pool.query('UPDATE users SET totp_enabled = TRUE WHERE id = $1', [id]);
-    delete req.session.setupUserId;
+    await pool.query('UPDATE users SET totp_enabled = TRUE WHERE id = $1', [req.session.userId]);
     res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Blad serwera' });
-  }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Blad serwera' }); }
 });
 
-// WF-2: logowanie — krok 1: weryfikacja hasla.
+// WF-3 (opcjonalne): wyłączenie 2FA aplikacją (wymaga hasła).
+router.post('/2fa/disable', requireAuth, authLimiter, async (req, res) => {
+  const { password } = req.body;
+  try {
+    const r = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.session.userId]);
+    if (!(await bcrypt.compare(password || '', r.rows[0].password_hash))) {
+      return res.status(401).json({ error: 'Nieprawidłowe hasło' });
+    }
+    await pool.query('UPDATE users SET totp_enabled = FALSE, totp_secret = NULL WHERE id = $1', [req.session.userId]);
+    res.json({ ok: true });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Blad serwera' }); }
+});
+
+// WF-2: logowanie — krok 1: weryfikacja hasła.
+// Zwraca totp=true, jeśli konto ma włączony authenticator; inaczej drugim
+// składnikiem jest kod e-mail (strona weryfikacji sama go wyśle).
 router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -112,26 +121,22 @@ router.post('/login', authLimiter, async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'Nieprawidlowy e-mail lub haslo' });
     }
-    if (!user.totp_enabled) {
-      // konto bez dokonczonej konfiguracji 2FA -> wroc do przywiazania aplikacji
-      req.session.setupUserId = user.id;
-      return res.json({ step: 'setup' });
-    }
-    req.session.pendingUserId = user.id;                   // czeka na kod 2FA (WF-3)
-    res.json({ step: 'otp' });
+    req.session.pendingUserId = user.id;                   // czeka na drugi składnik
+    res.json({ step: 'otp', totp: user.totp_enabled });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Blad serwera' });
   }
 });
 
-// WF-3: logowanie — krok 2: weryfikacja kodu TOTP.
+// WF-3: logowanie — krok 2: weryfikacja kodu TOTP (dla kont z włączonym 2FA).
 router.post('/login/otp', authLimiter, async (req, res) => {
   const { token } = req.body;
   const pendingId = req.session.pendingUserId;
   if (!pendingId) return res.status(400).json({ error: 'Brak rozpoczetego logowania' });
   try {
     const r = await pool.query('SELECT totp_secret FROM users WHERE id = $1', [pendingId]);
+    if (!r.rows[0].totp_secret) return res.status(400).json({ error: 'Brak skonfigurowanego 2FA' });
     const secret = decryptSecret(r.rows[0].totp_secret);
     if (!authenticator.verify({ token, secret })) {
       return res.status(401).json({ error: 'Nieprawidlowy kod' });

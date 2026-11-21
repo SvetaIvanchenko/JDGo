@@ -3,35 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Weryfikacja 2FA — JDGo</title>
+  <title>Weryfikacja logowania — JDGo</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="/pages/auth.html">JDGo</a></header>
+  <header class="topbar"><a class="brand" href="/auth">JDGo</a></header>
 
   <main class="page">
     <div class="card">
-      <h1>Weryfikacja 2FA</h1>
-      <p class="lead">Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej.</p>
-      <form id="form">
-        <label>Kod
-          <input type="text" name="token" inputmode="numeric" pattern="[0-9]*" maxlength="6"
-                 placeholder="6 cyfr" required autofocus>
-        </label>
-        <button class="btn" type="submit">Potwierdź</button>
-      </form>
+      <h1>Weryfikacja logowania</h1>
 
-      <p class="row-links">Nie masz dostępu do aplikacji?
-        <a href="#" id="sendCode">Wyślij kod na e-mail</a></p>
+      <!-- Wariant A: kod z aplikacji uwierzytelniającej (gdy 2FA włączone) -->
+      <div id="totpBlock" style="display:none">
+        <p class="lead">Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej.</p>
+        <form id="totpForm">
+          <label>Kod
+            <input type="text" name="token" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                   placeholder="6 cyfr" autocomplete="one-time-code">
+          </label>
+          <button class="btn" type="submit">Potwierdź</button>
+        </form>
+        <p class="row-links">Nie masz dostępu do aplikacji?
+          <a href="#" id="sendCode">Wyślij kod na e-mail</a></p>
+      </div>
 
-      <!-- Druga metoda: logowanie kodem z e-maila -->
-      <form id="codeForm" style="display:none;margin-top:6px">
-        <label>Kod z e-maila
-          <input type="text" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="6"
-                 placeholder="6 cyfr z e-maila">
-        </label>
-        <button class="btn" type="submit">Zaloguj kodem z e-maila</button>
-      </form>
+      <!-- Wariant B: jednorazowy kod wysłany na e-mail -->
+      <div id="codeBlock" style="display:none">
+        <p class="lead" id="codeLead">Wysłaliśmy 6-cyfrowy kod na Twój e-mail. Wpisz go poniżej.</p>
+        <form id="codeForm">
+          <label>Kod z e-maila
+            <input type="text" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                   placeholder="6 cyfr z e-maila" autocomplete="one-time-code">
+          </label>
+          <button class="btn" type="submit">Zaloguj się</button>
+        </form>
+        <p class="row-links"><a href="#" id="resendCode">Wyślij kod ponownie</a></p>
+      </div>
 
       <p id="msg" class="msg"></p>
     </div>
@@ -45,10 +52,31 @@
   <script src="/js/api.js"></script>
   <script>
     const msg = document.getElementById('msg');
-    const codeForm = document.getElementById('codeForm');
+    const totpBlock = document.getElementById('totpBlock');
+    const codeBlock = document.getElementById('codeBlock');
+    const hasTotp = new URLSearchParams(location.search).get('totp') === '1';
 
-    // Krok TOTP (kod z aplikacji)
-    document.getElementById('form').addEventListener('submit', async (e) => {
+    async function sendEmailCode() {
+      msg.className = 'msg';
+      try {
+        await api('/auth/login/email-code', 'POST');
+        totpBlock.style.display = 'none';
+        codeBlock.style.display = 'block';
+        document.querySelector('#codeForm input[name=code]').focus();
+      } catch (err) { msg.textContent = err.message; }
+    }
+
+    // Wybór wariantu
+    if (hasTotp) {
+      totpBlock.style.display = 'block';
+      document.querySelector('#totpForm input[name=token]').focus();
+    } else {
+      // brak authenticatora -> od razu wyślij kod na e-mail
+      sendEmailCode();
+    }
+
+    // TOTP
+    document.getElementById('totpForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       msg.className = 'msg';
       try {
@@ -56,21 +84,11 @@
         location.href = '/';
       } catch (err) { msg.textContent = err.message; }
     });
+    document.getElementById('sendCode').addEventListener('click', (e) => { e.preventDefault(); sendEmailCode(); });
+    document.getElementById('resendCode').addEventListener('click', (e) => { e.preventDefault(); sendEmailCode(); });
 
-    // Wyślij jednorazowy kod na e-mail
-    document.getElementById('sendCode').addEventListener('click', async (e) => {
-      e.preventDefault();
-      msg.className = 'msg';
-      try {
-        await api('/auth/login/email-code', 'POST');
-        codeForm.style.display = 'flex';
-        msg.className = 'msg ok';
-        msg.textContent = 'Wysłaliśmy 6-cyfrowy kod na Twój e-mail. Wpisz go poniżej.';
-      } catch (err) { msg.textContent = err.message; }
-    });
-
-    // Logowanie kodem z e-maila
-    codeForm.addEventListener('submit', async (e) => {
+    // Kod z e-maila
+    document.getElementById('codeForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       msg.className = 'msg';
       try {
