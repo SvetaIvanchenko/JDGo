@@ -414,7 +414,27 @@
     'Twoje hasło': 'Your password',
     'Uwierzytelnianie dwuetapowe włączone.': 'Two-factor authentication enabled.',
     'Uwierzytelnianie dwuetapowe wyłączone.': 'Two-factor authentication disabled.',
-    'Zeskanuj nowy kod QR i potwierdź, aby przepiąć aplikację.': 'Scan the new QR code and confirm to re-link the app.'
+    'Zeskanuj nowy kod QR i potwierdź, aby przepiąć aplikację.': 'Scan the new QR code and confirm to re-link the app.',
+
+    // — Kalkulator ZUS (dodane) —
+    'Składki ZUS': 'Social security (ZUS)',
+    'Orientacyjny kalkulator miesięcznych składek przedsiębiorcy (społeczne + zdrowotna). Termin płatności: do 20. dnia następnego miesiąca.': 'Indicative calculator of monthly contributions (social + health). Payment deadline: by the 20th of the following month.',
+    'Parametry': 'Parameters',
+    'Schemat składek': 'Contribution scheme',
+    'Pełny ZUS': 'Full ZUS',
+    'Preferencyjne składki (24 mies.)': 'Preferential contributions (24 months)',
+    'Ulga na start (6 mies.)': 'Relief at start (6 months)',
+    'Dochód miesięczny (zł)': 'Monthly income (PLN)',
+    'Przychód roczny (zł)': 'Annual revenue (PLN)',
+    'Dobrowolne ubezpieczenie chorobowe': 'Voluntary sickness insurance',
+    'Parametry bazowe 2026 (edytowalne)': 'Base parameters 2026 (editable)',
+    'Podstawa — pełny ZUS': 'Base — full ZUS',
+    'Podstawa — preferencyjne': 'Base — preferential',
+    'Min. składka zdrowotna': 'Min. health contribution',
+    'Składki miesięczne': 'Monthly contributions',
+    'Składka zdrowotna': 'Health contribution',
+    'Razem społeczne': 'Total social',
+    'Razem do zapłaty': 'Total to pay'
   };
 
   window.t = function (pl) {

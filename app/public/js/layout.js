@@ -31,6 +31,7 @@
     ]},
     { label: 'Narzędzia', icon: 'tools', children: [
       { label: 'Szablony', href: '/pages/szablony.html' },
+      { label: 'Składki ZUS', href: '/pages/zus.html' },
       { label: 'Kursy walut', href: '/pages/kursy.html' },
       { label: 'Import', href: '/pages/import.html' },
       { label: 'Eksport', href: '/pages/eksport.html' },
