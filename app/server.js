@@ -61,6 +61,9 @@ app.use('/api/import', dbContext, require('./src/routes/import'));
 app.use('/api/templates', dbContext, require('./src/routes/templates'));
 app.use('/api/rates', dbContext, require('./src/routes/rates'));
 
+// Czysty adres ekranu powitalnego/logowania (bez /pages/auth.html w URL).
+app.get('/auth', (req, res) => res.sendFile(path.join(__dirname, 'public/pages/auth.html')));
+
 // Frontend — pliki statyczne z folderu public/
 app.use(express.static(path.join(__dirname, 'public')));
 
