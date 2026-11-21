@@ -124,19 +124,25 @@ function sendLoginCode(to, code) {
 function sendReminder(to, items, appUrl) {
   const font = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
   const url = (appUrl || APP_URL) + '/';
-  const rows = items.map((i) =>
-    `<tr><td style="padding:8px 0;border-bottom:1px solid #eef0f2;font-family:${font};font-size:14px;color:#15181b">${i.label}</td>` +
-    `<td style="padding:8px 0;border-bottom:1px solid #eef0f2;text-align:right;font-family:${font};font-size:14px;color:#15663b;font-weight:600">do ${i.due}</td></tr>`).join('');
+  const anyOverdue = items.some((i) => i.overdue);
+  const rows = items.map((i) => {
+    const right = i.overdue
+      ? `<span style="color:#b42318;font-weight:700">PO TERMINIE (${i.due})</span>`
+      : `<span style="color:#15663b;font-weight:600">do ${i.due}</span>`;
+    return `<tr><td style="padding:8px 0;border-bottom:1px solid #eef0f2;font-family:${font};font-size:14px;color:#15181b">${i.label}</td>` +
+      `<td style="padding:8px 0;border-bottom:1px solid #eef0f2;text-align:right;font-family:${font};font-size:14px">${right}</td></tr>`;
+  }).join('');
   const body = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px">${rows}</table>` +
     `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#15663b" style="border-radius:8px">` +
     `<a href="${url}" target="_blank" style="display:inline-block;padding:13px 28px;font-family:${font};font-size:15px;font-weight:600;color:#fff;text-decoration:none;border-radius:8px">Otwórz JDGo</a>` +
     `</td></tr></table>`;
   return sendMail({
-    to, subject: 'Przypomnienie o terminach podatkowych — JDGo',
-    devInfo: 'TERMINY: ' + items.map((i) => i.label + ' do ' + i.due).join(', '),
+    to,
+    subject: anyOverdue ? 'Zaległe terminy podatkowe — JDGo' : 'Przypomnienie o terminach podatkowych — JDGo',
+    devInfo: 'TERMINY: ' + items.map((i) => i.label + (i.overdue ? ' PO TERMINIE ' : ' do ') + i.due).join(', '),
     html: shell({
-      title: 'Zbliżają się terminy',
-      intro: 'Przypominamy o nadchodzących terminach płatności. Kwoty sprawdzisz w aplikacji.',
+      title: anyOverdue ? 'Zaległe / zbliżające się terminy' : 'Zbliżają się terminy',
+      intro: 'Poniższe zobowiązania wymagają uwagi. Kwoty sprawdzisz w aplikacji. Jeśli już opłacone — oznacz je na pulpicie, aby nie przypominać ponownie.',
       bodyHtml: body,
       note: 'Wiadomość informacyjna — nie uwzględnia ewentualnych nadpłat ani zwolnień.'
     })

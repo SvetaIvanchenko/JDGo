@@ -351,6 +351,10 @@ hr { border: none; border-top: 1px solid var(--line); margin: 22px 0; }
 .dash-list a:hover { color: var(--green); }
 .dash-sub { color: var(--muted); font-size: 0.8rem; }
 .dash-amount { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pay-check { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.pay-box { width: 16px; height: 16px; accent-color: var(--green); flex: 0 0 auto; cursor: pointer; }
+.dash-list li.paid .dash-amount { text-decoration: line-through; color: var(--muted); }
+.dash-list li.paid .pay-check span { color: var(--muted); }
 .dash-empty { color: var(--muted); font-size: 0.88rem; padding: 8px 0; }
 .pos { color: var(--green); }
 .neg { color: var(--err); }

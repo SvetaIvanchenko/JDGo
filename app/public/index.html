@@ -121,21 +121,38 @@
         const fd = (d) => d.toISOString().slice(0, 10);
         const daysLeft = (d) => Math.round((d - todayU) / 86400000);
         const rows = [
-          { label: 'Zaliczka PIT', amount: prev ? prev.pit : null, date: new Date(Date.UTC(y, mo, 20)) },
-          { label: 'VAT (JPK_V7)', amount: prev ? prev.vat.do_zaplaty : null, date: new Date(Date.UTC(y, mo, 25)) }
+          { kind: 'pit', label: 'Zaliczka PIT', amount: prev ? prev.pit : null, date: new Date(Date.UTC(y, mo, 20)) },
+          { kind: 'vat', label: 'VAT (JPK_V7)', amount: prev ? prev.vat.do_zaplaty : null, date: new Date(Date.UTC(y, mo, 25)) }
         ];
         // Składki ZUS za poprzedni miesiąc — termin do 20. bieżącego miesiąca.
         const zus = window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe,
           form: zusCfg.form, income: prev ? prev.wynik_net : 0,
           revenue: prev ? Number(prev.income.net) * 12 : 0 });
-        if (zus.configured) rows.push({ label: 'Składki ZUS', amount: zus.total, date: new Date(Date.UTC(y, mo, 20)) });
+        if (zus.configured) rows.push({ kind: 'zus', label: 'Składki ZUS', amount: zus.total, date: new Date(Date.UTC(y, mo, 20)) });
+        const period = pf.toISOString().slice(0, 7);
         document.getElementById('taxList').innerHTML = rows.map((r) => {
           const dl = daysLeft(r.date);
           const when = dl < 0 ? T('po terminie') : (dl + ' ' + T('dni'));
-          return '<li><span>' + r.label + '</span><span class="dash-amount ' + (dl < 0 ? 'neg' : '') + '">' +
+          return '<li>' +
+            '<label class="pay-check"><input type="checkbox" class="pay-box" data-kind="' + r.kind + '" data-period="' + period + '" title="Oznacz jako opłacone">' +
+            '<span>' + r.label + '</span></label>' +
+            '<span class="dash-amount ' + (dl < 0 ? 'neg' : '') + '">' +
             (r.amount != null ? money(r.amount) : '—') +
             ' <span class="dash-sub">· ' + pmLabel + ' · ' + fd(r.date) + ' · ' + when + '</span></span></li>';
         }).join('');
+        // Status opłacenia + przełączniki
+        api('/obligations?period=' + period).then((o) => {
+          (o.paid || []).forEach((k) => {
+            const b = document.querySelector('.pay-box[data-kind="' + k + '"]');
+            if (b) { b.checked = true; b.closest('li').classList.add('paid'); }
+          });
+        }).catch(() => {});
+        document.querySelectorAll('.pay-box').forEach((b) => b.addEventListener('change', async () => {
+          try {
+            await api('/obligations/toggle', 'POST', { kind: b.dataset.kind, period: b.dataset.period, paid: b.checked });
+            b.closest('li').classList.toggle('paid', b.checked);
+          } catch (e) { b.checked = !b.checked; }
+        }));
       }
       try {
         const s = await api('/reports/summary');
