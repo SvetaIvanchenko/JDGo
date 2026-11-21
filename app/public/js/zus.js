@@ -6,20 +6,9 @@
   const fmt = (n) => new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
   const num = (id) => Number(String(document.getElementById(id).value).replace(',', '.')) || 0;
 
-  // Stawki składek społecznych (% podstawy) — stabilne, ustawowe.
-  const RATE = { emer: 0.1952, rent: 0.08, chor: 0.0245, wyp: 0.0167, fp: 0.0245 };
-
-  // Domyślne wartości bazowe 2026 (orientacyjne — zweryfikuj na zus.pl).
-  const D = {
-    podstPelny: 5652.45,   // 60% prognozowanego przeciętnego wynagrodzenia
-    podstPref: 1441.80,    // 30% minimalnego wynagrodzenia (4806 zł)
-    zdrMin: 432.54,        // minimalna składka zdrowotna (skala/liniowy)
-    zdrSkala: 0.09,        // 9% dochodu
-    zdrLiniowy: 0.049,     // 4,9% dochodu
-    zdrRycz1: 498.35,      // ryczałt: przychód ≤ 60 000 zł
-    zdrRycz2: 830.58,      // ryczałt: 60 000–300 000 zł
-    zdrRycz3: 1494.05      // ryczałt: > 300 000 zł
-  };
+  // Stawki i wartości bazowe ze wspólnego modułu (zus-calc.js).
+  const RATE = window.ZUS.RATE;
+  const D = Object.assign({}, window.ZUS.DEF);
 
   window.initZus = function () {
     const app = document.getElementById('app');

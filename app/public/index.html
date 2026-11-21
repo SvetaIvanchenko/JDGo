@@ -80,6 +80,7 @@
   <script src="/js/policy.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/i18n.js"></script>
+  <script src="/js/zus-calc.js"></script>
   <script>
     const money = (v, cur) => new Intl.NumberFormat('pl-PL',
       { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0) + (cur ? ' ' + cur : ' zł');
@@ -90,11 +91,13 @@
     const MONTHS_SHORT = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
     const T = (s) => (window.t ? window.t(s) : s);
 
+    let zusCfg = { scheme: 'pelny', chorobowe: true, form: 'skala' };
     (async () => {
       // profil (powitanie) — także chroni stronę (layout.js robi redirect przy braku sesji)
       try {
         const p = await api('/profile');
         if (p.display_name) document.getElementById('hello').textContent = T('Witaj') + ', ' + p.display_name + '!';
+        zusCfg = { scheme: p.zus_scheme || 'pelny', chorobowe: !!p.zus_chorobowe, form: p.tax_form || 'skala' };
       } catch (e) { return; }
 
       const now = new Date();
@@ -121,6 +124,10 @@
           { label: 'Zaliczka PIT', amount: prev ? prev.pit : null, date: new Date(Date.UTC(y, mo, 20)) },
           { label: 'VAT (JPK_V7)', amount: prev ? prev.vat.do_zaplaty : null, date: new Date(Date.UTC(y, mo, 25)) }
         ];
+        // Składki ZUS za poprzedni miesiąc — termin do 20. bieżącego miesiąca.
+        const zus = window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe,
+          form: zusCfg.form, income: prev ? prev.wynik_net : 0 });
+        if (zus.configured) rows.push({ label: 'Składki ZUS', amount: zus.total, date: new Date(Date.UTC(y, mo, 20)) });
         document.getElementById('taxList').innerHTML = rows.map((r) => {
           const dl = daysLeft(r.date);
           const when = dl < 0 ? T('po terminie') : (dl + ' ' + T('dni'));
@@ -213,7 +220,17 @@
             datasets: [
               { label: T('Przychody'), data: m.months.map((x) => Number(x.przychod)), backgroundColor: '#15803d' },
               { label: T('Koszty'), data: m.months.map((x) => Number(x.koszt)), backgroundColor: '#d97706' }
-            ]
+            ].concat(zusCfg.scheme !== 'none' ? [{
+              label: T('Składki ZUS'),
+              data: m.months.map((x) => {
+                const ym = String(x.month).slice(0, 7);
+                const nowYm = new Date().toISOString().slice(0, 7);
+                if (ym > nowYm) return 0; // przyszłe miesiące — jeszcze nie płacone
+                const doch = Number(x.przychod) - Number(x.koszt);
+                return window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe, form: zusCfg.form, income: doch }).total;
+              }),
+              backgroundColor: '#6b7280'
+            }] : [])
           },
           options: {
             responsive: true, maintainAspectRatio: true,

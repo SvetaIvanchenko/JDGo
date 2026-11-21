@@ -12,6 +12,7 @@ router.get('/', requireAuth, async (req, res) => {
       `SELECT u.id, u.email, u.display_name, u.service_category,
               u.default_vat_rate_id, vr.code AS vat_code,
               u.tax_form, u.default_currency, u.totp_enabled,
+              u.zus_scheme, u.zus_chorobowe,
               to_char(u.updated_at, 'YYYY-MM-DD HH24:MI') AS updated_at
        FROM users u
        JOIN vat_rates vr ON vr.id = u.default_vat_rate_id
@@ -28,7 +29,9 @@ router.get('/', requireAuth, async (req, res) => {
 
 // WF-6, WF-7, WF-21: aktualizacja profilu
 router.put('/', requireAuth, async (req, res) => {
-  const { display_name, service_category, default_vat_rate_id, tax_form, default_currency } = req.body;
+  const { display_name, service_category, default_vat_rate_id, tax_form, default_currency,
+          zus_scheme, zus_chorobowe } = req.body;
+  const scheme = ['pelny', 'pref', 'start', 'none'].includes(zus_scheme) ? zus_scheme : 'pelny';
   try {
     await pool.query(
       `UPDATE users
@@ -36,9 +39,12 @@ router.put('/', requireAuth, async (req, res) => {
              service_category = $2,
              default_vat_rate_id = $3,
              tax_form = $4,
-             default_currency = $5
-       WHERE id = $6`,
-      [display_name, service_category, default_vat_rate_id, tax_form, default_currency, req.session.userId]
+             default_currency = $5,
+             zus_scheme = $6,
+             zus_chorobowe = $7
+       WHERE id = $8`,
+      [display_name, service_category, default_vat_rate_id, tax_form, default_currency,
+       scheme, zus_chorobowe === true || zus_chorobowe === 'true', req.session.userId]
     );
     res.json({ ok: true });
   } catch (e) {

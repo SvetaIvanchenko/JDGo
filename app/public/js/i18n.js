@@ -434,7 +434,13 @@
     'Składki miesięczne': 'Monthly contributions',
     'Składka zdrowotna': 'Health contribution',
     'Razem społeczne': 'Total social',
-    'Razem do zapłaty': 'Total to pay'
+    'Razem do zapłaty': 'Total to pay',
+    'Składki ZUS (mies.)': 'ZUS contributions (monthly)',
+    'Schemat ZUS': 'ZUS scheme',
+    'Preferencyjne składki': 'Preferential contributions',
+    'Ulga na start': 'Relief at start',
+    'Brak / nie dotyczy': 'None / N/A',
+    'Dobrowolne chorobowe (ZUS)': 'Voluntary sickness (ZUS)'
   };
 
   window.t = function (pl) {

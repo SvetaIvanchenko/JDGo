@@ -4,6 +4,7 @@
     { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0) + (cur ? ' ' + cur : ' zł');
   const vatLabel = (code) => (code === 'zw' ? 'zw.' : code + '%');
   const typeLabel = (t) => (t === 'przychod' ? 'Przychód' : 'Koszt');
+  let zusCfg = { scheme: 'pelny', chorobowe: true, form: 'skala' };
 
   function monthRange() {
     const d = new Date();
@@ -57,7 +58,11 @@
         '<div class="metric"><div class="label">VAT naliczony</div><div class="value">' + money(s.vat.vat_naliczony) + '</div></div>' +
         '<div class="metric"><div class="label">VAT do zapłaty</div><div class="value">' + money(s.vat.do_zaplaty) + '</div></div>' +
         '<div class="metric"><div class="label">Zaliczka PIT</div><div class="value">' + money(s.pit) + '</div></div>' +
-        '</div>';
+        '</div>' +
+        (function () {
+          const z = window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe, form: zusCfg.form, income: Number(s.wynik_net) });
+          return z.configured ? '<div class="metrics"><div class="metric"><div class="label">Składki ZUS (mies.)</div><div class="value">' + money(z.total) + '</div></div></div>' : '';
+        })();
 
       let table;
       if (!s.byRate.length) {
@@ -85,6 +90,11 @@
         render(s);
       } catch (err) { msg.textContent = err.message; }
     }
+
+    try {
+      const p = await api('/profile');
+      zusCfg = { scheme: p.zus_scheme || 'pelny', chorobowe: !!p.zus_chorobowe, form: p.tax_form || 'skala' };
+    } catch (e) { /* zostaje domyślny */ }
 
     document.getElementById('rShow').addEventListener('click', load);
     document.querySelectorAll('.period-presets .chip').forEach((b) => b.addEventListener('click', () => {
