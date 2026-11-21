@@ -181,7 +181,7 @@ router.post('/password/forgot', authLimiter, async (req, res) => {
     const r = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     if (r.rows[0]) {
       const { raw, hash } = newToken();
-      await pool.query('SELECT f_token_issue($1,$2,$3,$4)', [r.rows[0].id, 'recovery', hash, 60]);
+      await pool.query('SELECT f_token_issue($1,$2,$3,$4)', [r.rows[0].id, 'recovery', hash, 15]);
       await mailer.sendRecovery(email, raw);
     }
     res.json({ ok: true });

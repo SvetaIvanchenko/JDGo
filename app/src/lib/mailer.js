@@ -7,35 +7,69 @@ const FROM = process.env.MAIL_FROM || 'JDGo <onboarding@resend.dev>';
 const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 
+// Wspólny "szkielet" e-maila — układ tabelowy (zgodność z Gmail/Outlook),
+// style inline, czcionki systemowe, logo JDGo, stopka. bodyHtml = środek karty.
+function shell({ title, intro, bodyHtml, note, preheader }) {
+  const font = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+  return `<!doctype html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light"></head>
+<body style="margin:0;padding:0;background:#f4f5f6;">
+<span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;overflow:hidden;mso-hide:all">${preheader || title}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f6;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+      <!-- Logo -->
+      <tr><td style="padding:0 4px 18px;font-family:${font};font-size:22px;font-weight:700;letter-spacing:-0.2px;">
+        <span style="color:#15663b;">JDG</span><span style="color:#4a9e6f;">o</span>
+      </td></tr>
+      <!-- Karta -->
+      <tr><td style="background:#ffffff;border:1px solid #e4e7ea;border-radius:10px;padding:34px 32px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="font-family:${font};font-size:19px;font-weight:600;color:#15181b;padding:0 0 12px;">${title}</td></tr>
+          <tr><td style="font-family:${font};font-size:14px;line-height:1.65;color:#3a4047;padding:0 0 24px;">${intro}</td></tr>
+          <tr><td>${bodyHtml}</td></tr>
+          <tr><td style="font-family:${font};font-size:12px;line-height:1.6;color:#6b7177;padding:24px 0 0;border-top:1px solid #eef0f2;margin-top:24px;">${note}</td></tr>
+        </table>
+      </td></tr>
+      <!-- Stopka -->
+      <tr><td style="font-family:${font};font-size:11px;line-height:1.6;color:#9aa0a6;padding:18px 4px 0;">
+        Wiadomość automatyczna z aplikacji <strong style="color:#6b7177;">JDGo</strong>. Jeśli to nie Ty — zignoruj ten e-mail.
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
+}
+
+// Przycisk "bulletproof" (tabelowy — działa też w Outlooku).
+function button(text, url) {
+  const font = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+  return `<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+    <td align="center" bgcolor="#15663b" style="border-radius:8px;">
+      <a href="${url}" target="_blank" style="display:inline-block;padding:13px 28px;font-family:${font};font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${text}</a>
+    </td></tr></table>`;
+}
+
 // Szablon z przyciskiem-linkiem.
 function linkLayout(title, intro, btnText, url, note) {
-  return `<!doctype html><html><body style="margin:0;background:#f4f5f6;font-family:Arial,Helvetica,sans-serif;color:#15181b">
-  <div style="max-width:520px;margin:0 auto;padding:32px 20px">
-    <div style="font-size:22px;font-weight:700;color:#15663b;margin-bottom:20px">JDGo</div>
-    <div style="background:#fff;border:1px solid #e4e7ea;border-radius:8px;padding:28px">
-      <h1 style="font-size:18px;margin:0 0 12px">${title}</h1>
-      <p style="font-size:14px;line-height:1.6;margin:0 0 20px;color:#3a4047">${intro}</p>
-      <a href="${url}" style="display:inline-block;background:#15663b;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 22px;border-radius:8px">${btnText}</a>
-      <p style="font-size:12px;line-height:1.6;color:#6b7177;margin:20px 0 0">${note}</p>
-      <p style="font-size:12px;line-height:1.5;color:#9aa0a6;margin:14px 0 0;word-break:break-all">${url}</p>
-    </div>
-    <p style="font-size:11px;color:#9aa0a6;margin:16px 0 0">Wiadomość automatyczna z aplikacji JDGo. Jeśli to nie Ty — zignoruj ten e-mail.</p>
-  </div></body></html>`;
+  const font = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+  const body = button(btnText, url) +
+    `<p style="font-family:${font};font-size:12px;line-height:1.5;color:#9aa0a6;margin:18px 0 0;word-break:break-all;">
+      Jeśli przycisk nie działa, skopiuj ten adres do przeglądarki:<br>
+      <a href="${url}" target="_blank" style="color:#15663b;">${url}</a></p>`;
+  return shell({ title, intro, bodyHtml: body, note });
 }
 
 // Szablon z kodem jednorazowym.
 function codeLayout(title, intro, code, note) {
-  return `<!doctype html><html><body style="margin:0;background:#f4f5f6;font-family:Arial,Helvetica,sans-serif;color:#15181b">
-  <div style="max-width:520px;margin:0 auto;padding:32px 20px">
-    <div style="font-size:22px;font-weight:700;color:#15663b;margin-bottom:20px">JDGo</div>
-    <div style="background:#fff;border:1px solid #e4e7ea;border-radius:8px;padding:28px">
-      <h1 style="font-size:18px;margin:0 0 12px">${title}</h1>
-      <p style="font-size:14px;line-height:1.6;margin:0 0 18px;color:#3a4047">${intro}</p>
-      <div style="font-size:30px;font-weight:700;letter-spacing:8px;color:#15663b;background:#f4f5f6;border:1px solid #e4e7ea;border-radius:8px;padding:16px;text-align:center">${code}</div>
-      <p style="font-size:12px;line-height:1.6;color:#6b7177;margin:18px 0 0">${note}</p>
-    </div>
-    <p style="font-size:11px;color:#9aa0a6;margin:16px 0 0">Wiadomość automatyczna z aplikacji JDGo. Jeśli to nie Ty — zignoruj ten e-mail.</p>
-  </div></body></html>`;
+  const font = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+  const body = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td align="center" style="background:#f4f6f5;border:1px solid #d9e5df;border-radius:10px;padding:20px 16px;">
+      <div style="font-family:${font};font-size:34px;font-weight:700;letter-spacing:10px;color:#15663b;">${code}</div>
+    </td></tr></table>`;
+  return shell({ title, intro, bodyHtml: body, note, preheader: 'Twój kod logowania: ' + code });
 }
 
 async function sendMail({ to, subject, html, devInfo }) {
@@ -71,7 +105,7 @@ function sendRecovery(to, rawToken) {
     devInfo: 'LINK:  ' + url,
     html: linkLayout('Odzyskiwanie dostępu',
       'Kliknij przycisk, aby jednorazowo zalogować się do JDGo. Po wejściu zmień hasło w ustawieniach konta.',
-      'Zaloguj się', url, 'Link jest ważny 60 minut. Jeśli to nie Ty — zignoruj ten e-mail.'),
+      'Zaloguj się', url, 'Link jest ważny 15 minut. Jeśli to nie Ty — zignoruj ten e-mail.'),
   });
 }
 
