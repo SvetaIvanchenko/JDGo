@@ -116,9 +116,10 @@
       <div class="profile-body">
         <div class="profile-cols">
           <div class="pw-fields">
-            <label class="pw-field">Stare hasło
+            <label class="pw-field" id="oldPwField">Stare hasło
               <input type="password" name="old_password" required>
             </label>
+            <p id="recoveryNote" class="msg ok" style="display:none">Logowanie przez link odzyskiwania — ustaw nowe hasło (bez podawania starego).</p>
             <label class="pw-field">Nowe hasło
               <input type="password" name="new_password" minlength="10" required>
             </label>
@@ -215,6 +216,14 @@
         document.getElementById('phName').textContent = p.display_name || p.email;
         document.getElementById('phEmail').textContent = p.email;
         document.getElementById('phUpdated').textContent = p.updated_at || '—';
+
+        // Logowanie linkiem odzyskiwania: ukryj pole "stare hasło".
+        if (p.recovery) {
+          const oldField = document.getElementById('oldPwField');
+          oldField.style.display = 'none';
+          passwordForm.old_password.required = false;
+          document.getElementById('recoveryNote').style.display = 'block';
+        }
 
         // Sekcja Bezpieczeństwo + Konto
         const enabled = !!p.totp_enabled;

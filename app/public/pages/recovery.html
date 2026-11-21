@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Odzyskiwanie dostępu — JDGo</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/pages/auth.html">JDGo</a></header>
+
+  <main class="page">
+    <div class="card">
+      <h1>Odzyskiwanie dostępu</h1>
+      <p id="msg" class="lead">Weryfikacja linku…</p>
+      <p class="row-links"><a href="/pages/login.html">Wróć do logowania</a></p>
+    </div>
+  </main>
+
+  <footer class="footer"><a class="js-policy" href="#">Polityka prywatności</a></footer>
+
+  <script src="/js/policy.js"></script>
+  <script src="/js/auth-layout.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    const msg = document.getElementById('msg');
+    const token = new URLSearchParams(location.search).get('token');
+    (async () => {
+      if (!token) { msg.className = 'msg'; msg.textContent = 'Brak tokenu w linku.'; return; }
+      try {
+        await api('/auth/recovery/verify', 'POST', { token });
+        msg.className = 'msg ok';
+        msg.textContent = 'Wejście dozwolone. Przekierowanie do konta — pamiętaj, aby zmienić hasło w ustawieniach.';
+        setTimeout(() => location.href = '/pages/profile.html', 1400);
+      } catch (err) {
+        msg.className = 'msg';
+        msg.textContent = err.message;
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -20,6 +20,19 @@
         </label>
         <button class="btn" type="submit">Potwierdź</button>
       </form>
+
+      <p class="row-links">Nie masz dostępu do aplikacji?
+        <a href="#" id="sendCode">Wyślij kod na e-mail</a></p>
+
+      <!-- Druga metoda: logowanie kodem z e-maila -->
+      <form id="codeForm" style="display:none;margin-top:6px">
+        <label>Kod z e-maila
+          <input type="text" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                 placeholder="6 cyfr z e-maila">
+        </label>
+        <button class="btn" type="submit">Zaloguj kodem z e-maila</button>
+      </form>
+
       <p id="msg" class="msg"></p>
     </div>
   </main>
@@ -32,15 +45,38 @@
   <script src="/js/api.js"></script>
   <script>
     const msg = document.getElementById('msg');
+    const codeForm = document.getElementById('codeForm');
+
+    // Krok TOTP (kod z aplikacji)
     document.getElementById('form').addEventListener('submit', async (e) => {
       e.preventDefault();
       msg.className = 'msg';
       try {
         await api('/auth/login/otp', 'POST', { token: e.target.token.value });
         location.href = '/';
-      } catch (err) {
-        msg.textContent = err.message;
-      }
+      } catch (err) { msg.textContent = err.message; }
+    });
+
+    // Wyślij jednorazowy kod na e-mail
+    document.getElementById('sendCode').addEventListener('click', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg';
+      try {
+        await api('/auth/login/email-code', 'POST');
+        codeForm.style.display = 'flex';
+        msg.className = 'msg ok';
+        msg.textContent = 'Wysłaliśmy 6-cyfrowy kod na Twój e-mail. Wpisz go poniżej.';
+      } catch (err) { msg.textContent = err.message; }
+    });
+
+    // Logowanie kodem z e-maila
+    codeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg';
+      try {
+        await api('/auth/login/email-verify', 'POST', { code: e.target.code.value });
+        location.href = '/';
+      } catch (err) { msg.textContent = err.message; }
     });
   </script>
 </body>

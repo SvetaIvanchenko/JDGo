@@ -23,6 +23,7 @@
         <button class="btn" type="submit">Zaloguj się</button>
       </form>
       <p id="msg" class="msg"></p>
+      <p class="row-links"><a href="/pages/forgot.html">Nie pamiętasz hasła?</a></p>
       <p class="row-links"><a href="/pages/register.html">Nie masz konta? Zarejestruj się</a></p>
     </div>
   </main>
@@ -37,7 +38,7 @@
     const msg = document.getElementById('msg');
     document.getElementById('form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      msg.className = 'msg';
+      msg.className = 'msg'; msg.textContent = '';
       try {
         const r = await api('/auth/login', 'POST', {
           email: e.target.email.value,

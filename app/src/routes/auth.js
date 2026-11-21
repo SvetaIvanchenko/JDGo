@@ -9,9 +9,18 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+const crypto = require('crypto');
 const { encryptSecret, decryptSecret } = require('../lib/crypto');
+const mailer = require('../lib/mailer');
 const rateLimit = require('../middleware/rateLimit');
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Zbyt wiele prób. Spróbuj ponownie za 15 minut.' });
+
+// Tokeny jednorazowe: losowy ciąg w linku, w bazie tylko jego hasz SHA-256.
+function newToken() {
+  const raw = crypto.randomBytes(32).toString('hex');
+  return { raw, hash: crypto.createHash('sha256').update(raw).digest() };
+}
+const hashToken = (raw) => crypto.createHash('sha256').update(String(raw || '')).digest();
 
 // WN-1: polityka hasel — min. 10 znakow, wielka litera, cyfra, znak specjalny.
 function passwordPolicyError(pw) {
@@ -136,6 +145,63 @@ router.post('/login/otp', authLimiter, async (req, res) => {
   }
 });
 
+// WF-3 (alternatywa): wyślij jednorazowy 6-cyfrowy kod na e-mail zamiast kodu TOTP.
+router.post('/login/email-code', authLimiter, async (req, res) => {
+  const pendingId = req.session.pendingUserId;
+  if (!pendingId) return res.status(400).json({ error: 'Brak rozpoczetego logowania' });
+  try {
+    const r = await pool.query('SELECT email FROM users WHERE id = $1', [pendingId]);
+    const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+    await pool.query('SELECT f_token_issue($1,$2,$3,$4)', [pendingId, 'login', hashToken(code), 15]);
+    await mailer.sendLoginCode(r.rows[0].email, code);
+    res.json({ ok: true });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Blad serwera' }); }
+});
+
+// WF-3 (alternatywa): logowanie kodem z e-maila (jednorazowy, ważny 15 min).
+router.post('/login/email-verify', authLimiter, async (req, res) => {
+  const pendingId = req.session.pendingUserId;
+  if (!pendingId) return res.status(400).json({ error: 'Brak rozpoczetego logowania' });
+  const code = String(req.body.code || '').trim();
+  try {
+    const r = await pool.query('SELECT f_token_consume($1,$2) AS uid', ['login', hashToken(code)]);
+    const uid = r.rows[0].uid;
+    if (!uid || uid !== pendingId) return res.status(401).json({ error: 'Nieprawidłowy lub nieważny kod' });
+    req.session.userId = uid;
+    delete req.session.pendingUserId;
+    res.json({ ok: true });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Blad serwera' }); }
+});
+
+// Odzyskiwanie dostępu: wyślij link jednorazowego logowania (nie zdradza, czy konto istnieje).
+// Po zalogowaniu użytkownik zmienia hasło samodzielnie w ustawieniach konta.
+router.post('/password/forgot', authLimiter, async (req, res) => {
+  const { email } = req.body;
+  try {
+    const r = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (r.rows[0]) {
+      const { raw, hash } = newToken();
+      await pool.query('SELECT f_token_issue($1,$2,$3,$4)', [r.rows[0].id, 'recovery', hash, 60]);
+      await mailer.sendRecovery(email, raw);
+    }
+    res.json({ ok: true });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Blad serwera' }); }
+});
+
+// Odzyskiwanie dostępu: jednorazowe logowanie po kliknięciu linku (pomija 2FA).
+router.post('/recovery/verify', authLimiter, async (req, res) => {
+  const { token } = req.body;
+  try {
+    const r = await pool.query('SELECT f_token_consume($1,$2) AS uid', ['recovery', hashToken(token)]);
+    const uid = r.rows[0].uid;
+    if (!uid) return res.status(400).json({ error: 'Link nieprawidłowy lub wygasł' });
+    req.session.userId = uid;
+    req.session.pwReset = true;            // pozwól ustawić nowe hasło bez starego
+    delete req.session.pendingUserId;
+    res.json({ ok: true });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Blad serwera' }); }
+});
+
 // WF-2: wylogowanie.
 router.post('/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
@@ -158,12 +224,16 @@ router.post('/password', requireAuth, async (req, res) => {
   const pwErr = passwordPolicyError(new_password);
   if (pwErr) return res.status(400).json({ error: pwErr });
   try {
-    const r = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.session.userId]);
-    if (!(await bcrypt.compare(old_password || '', r.rows[0].password_hash))) {
-      return res.status(401).json({ error: 'Nieprawidlowe stare haslo' });
+    // Po zalogowaniu linkiem odzyskiwania (pwReset) nie wymagamy starego hasła.
+    if (!req.session.pwReset) {
+      const r = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.session.userId]);
+      if (!(await bcrypt.compare(old_password || '', r.rows[0].password_hash))) {
+        return res.status(401).json({ error: 'Nieprawidlowe stare haslo' });
+      }
     }
     const hash = await bcrypt.hash(new_password, 12);
     await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.session.userId]);
+    delete req.session.pwReset;            // jednorazowo
     res.json({ ok: true });
   } catch (e) {
     console.error(e);

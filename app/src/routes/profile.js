@@ -18,7 +18,8 @@ router.get('/', requireAuth, async (req, res) => {
        WHERE u.id = $1`,
       [req.session.userId]
     );
-    res.json(r.rows[0]);
+    // recovery=true: zalogowano linkiem odzyskiwania — pozwól ustawić hasło bez starego.
+    res.json({ ...r.rows[0], recovery: !!req.session.pwReset });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Blad serwera' });
