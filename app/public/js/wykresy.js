@@ -14,8 +14,14 @@
 
   const T = (s) => (window.t ? window.t(s) : s);
 
+  let zusCfg = { scheme: 'pelny', chorobowe: true, form: 'skala' };
+
   window.initCharts = async function () {
     const now = new Date();
+    try {
+      const p = await api('/profile');
+      zusCfg = { scheme: p.zus_scheme || 'pelny', chorobowe: !!p.zus_chorobowe, form: p.tax_form || 'skala' };
+    } catch (e) { /* domyślny */ }
     const app = document.getElementById('app');
     let opts = '';
     for (let y = now.getFullYear() - 3; y <= now.getFullYear() + 1; y++) {
@@ -62,12 +68,23 @@
 
       const przy = data.months.map((m) => Number(m.przychod));
       const kosz = data.months.map((m) => Number(m.koszt));
+      // Składki ZUS miesięcznie — tylko miesiące przeszłe/bieżące (nie przyszłe).
+      const selYear = Number(document.getElementById('wYear').value);
+      const nowY = now.getFullYear(), nowM = now.getMonth();
+      const zusData = data.months.map((m, i) => {
+        if (zusCfg.scheme === 'none') return 0;
+        if (selYear > nowY || (selYear === nowY && i > nowM)) return 0;
+        const doch = przy[i] - kosz[i];
+        return window.ZUS.monthly({ scheme: zusCfg.scheme, chorobowe: zusCfg.chorobowe, form: zusCfg.form, income: doch, revenue: przy[i] * 12 }).total;
+      });
+      const datasets = [
+        { label: T('Przychody'), data: przy, backgroundColor: GREEN },
+        { label: T('Koszty'), data: kosz, backgroundColor: RED }
+      ];
+      if (zusCfg.scheme !== 'none') datasets.push({ label: T('Składki ZUS'), data: zusData, backgroundColor: '#6b7280' });
       draw('bar', 'barC', {
         type: 'bar',
-        data: { labels: MONTHS.map(T), datasets: [
-          { label: T('Przychody'), data: przy, backgroundColor: GREEN },
-          { label: T('Koszty'), data: kosz, backgroundColor: RED }
-        ] },
+        data: { labels: MONTHS.map(T), datasets },
         options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
       });
 
