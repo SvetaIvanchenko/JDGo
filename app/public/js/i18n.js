@@ -444,6 +444,7 @@
     'Ryczałt ewidencjonowany': 'Lump-sum tax (ryczałt)',
     'Stawka ryczałtu (%)': 'Lump-sum rate (%)',
     'Na rękę (szac.)': 'Take-home (est.)',
+    'Opłacone': 'Paid',
     'Szacunek: dochód − zaliczka PIT − składki ZUS. VAT pominięty (neutralny — pobierany od klienta i odprowadzany do US).': 'Estimate: income − PIT advance − ZUS contributions. VAT omitted (neutral — collected from clients and remitted to the tax office).'
   };
 

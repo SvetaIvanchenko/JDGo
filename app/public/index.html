@@ -136,9 +136,11 @@
           return '<li>' +
             '<label class="pay-check"><input type="checkbox" class="pay-box" data-kind="' + r.kind + '" data-period="' + period + '" title="Oznacz jako opłacone">' +
             '<span>' + r.label + '</span></label>' +
-            '<span class="dash-amount ' + (dl < 0 ? 'neg' : '') + '">' +
-            (r.amount != null ? money(r.amount) : '—') +
-            ' <span class="dash-sub">· ' + pmLabel + ' · ' + fd(r.date) + ' · ' + when + '</span></span></li>';
+            '<span class="dash-amount">' +
+            '<span class="amt' + (dl < 0 ? ' neg' : '') + '">' + (r.amount != null ? money(r.amount) : '—') + '</span>' +
+            ' <span class="dash-sub status-when">· ' + pmLabel + ' · ' + fd(r.date) + ' · ' + when + '</span>' +
+            '<span class="pay-status">· ' + T('Opłacone') + '</span>' +
+            '</span></li>';
         }).join('');
         // Status opłacenia + przełączniki
         api('/obligations?period=' + period).then((o) => {
