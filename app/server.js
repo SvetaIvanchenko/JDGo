@@ -60,6 +60,7 @@ app.use('/api/search', dbContext, require('./src/routes/search'));
 app.use('/api/import', dbContext, require('./src/routes/import'));
 app.use('/api/templates', dbContext, require('./src/routes/templates'));
 app.use('/api/rates', dbContext, require('./src/routes/rates'));
+app.use('/api/obligations', require('./src/routes/obligations'));
 // Zadania harmonogramu (zewnętrzny cron) — chronione sekretem, bez sesji/RLS.
 app.use('/api/cron', require('./src/routes/cron'));
 
