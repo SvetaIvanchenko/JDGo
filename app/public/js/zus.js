@@ -10,13 +10,14 @@
   const RATE = window.ZUS.RATE;
   const D = Object.assign({}, window.ZUS.DEF);
 
-  window.initZus = function () {
+  window.initZus = async function () {
     const app = document.getElementById('app');
     app.innerHTML =
       '<h1 class="page-title">Składki ZUS</h1>' +
       '<p class="page-sub">Orientacyjny kalkulator miesięcznych składek przedsiębiorcy (społeczne + zdrowotna). Termin płatności: do 20. dnia następnego miesiąca.</p>' +
       '<div class="kurs-grid">' +
         '<div class="dash-card"><h2><span class="card-h">Parametry</span></h2>' +
+          '<label class="zus-check" style="margin:0 0 14px"><input type="checkbox" id="zMine" checked> Policz od moich danych (dochód z bieżącego miesiąca)</label>' +
           '<div class="op-grid">' +
             '<label>Schemat składek<select id="zScheme">' +
               '<option value="pelny">Pełny ZUS</option>' +
@@ -50,6 +51,30 @@
 
     const form = document.getElementById('zForm');
     const scheme = document.getElementById('zScheme');
+    const chk = document.getElementById('zChor');
+    const inc = document.getElementById('zIncome');
+    const rev = document.getElementById('zRevenue');
+    const mine = document.getElementById('zMine');
+
+    // Moje dane: forma/schemat z profilu, dochód z bieżącego miesiąca, przychód roczny (ryczałt).
+    const my = { scheme: 'pelny', form: 'skala', chorobowe: true, income: 0, revenue: 0 };
+    try {
+      const p = await api('/profile');
+      my.scheme = ['pelny', 'pref', 'start'].indexOf(p.zus_scheme) >= 0 ? p.zus_scheme : 'pelny';
+      my.form = p.tax_form || 'skala';
+      my.chorobowe = p.zus_chorobowe !== false;
+    } catch (e) { /* domyślne */ }
+    try { const s = await api('/reports/summary'); my.income = Math.max(0, Number(s.wynik_net) || 0); } catch (e) { /* 0 */ }
+    try { const m = await api('/reports/monthly'); my.revenue = (m.months || []).reduce((a, x) => a + Number(x.przychod), 0); } catch (e) { /* 0 */ }
+
+    function applyMine(on) {
+      [scheme, form, chk, inc, rev].forEach((el) => { el.disabled = on; });
+      if (on) {
+        scheme.value = my.scheme; form.value = my.form; chk.checked = my.chorobowe;
+        inc.value = my.income.toFixed(2); rev.value = my.revenue.toFixed(2);
+      }
+    }
+    mine.addEventListener('change', () => { applyMine(mine.checked); compute(); });
 
     function syncInputs() {
       const ryczalt = form.value === 'ryczalt';
@@ -109,6 +134,7 @@
       el.addEventListener('input', compute);
       el.addEventListener('change', compute);
     });
+    applyMine(true); // domyślnie: licz od moich danych
     compute();
   };
 })();

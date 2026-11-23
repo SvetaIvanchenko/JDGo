@@ -427,6 +427,7 @@
     'Dochód miesięczny (zł)': 'Monthly income (PLN)',
     'Przychód roczny (zł)': 'Annual revenue (PLN)',
     'Dobrowolne ubezpieczenie chorobowe': 'Voluntary sickness insurance',
+    'Policz od moich danych (dochód z bieżącego miesiąca)': 'Calculate from my data (current month income)',
     'Parametry bazowe 2026 (edytowalne)': 'Base parameters 2026 (editable)',
     'Podstawa — pełny ZUS': 'Base — full ZUS',
     'Podstawa — preferencyjne': 'Base — preferential',
