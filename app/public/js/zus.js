@@ -127,7 +127,11 @@
         '</tbody></table>' +
         '<p class="kurs-note">Termin zapłaty: <b>do 20. dnia</b> następnego miesiąca. ' +
         (s === 'start' ? 'Ulga na start: brak składek społecznych, płacisz tylko zdrowotną.' : '') +
-        '</p>';
+        '</p>' +
+        '<p class="kurs-note">Składki społeczne są <b>stałe</b> — naliczane od ustawowej podstawy ZUS' +
+        (s !== 'start' ? ' (' + fmt(base) + ' zł)' : '') + ', niezależnie od dochodu. ' +
+        'Dochód wpływa wyłącznie na <b>składkę zdrowotną</b>' +
+        (form.value !== 'ryczalt' ? ' (' + (form.value === 'liniowy' ? '4,9%' : '9%') + ' dochodu, min. ' + fmt(num('zZdrMin')) + ' zł)' : ' (progi przychodu)') + '.</p>';
     }
 
     app.querySelectorAll('select, input').forEach((el) => {

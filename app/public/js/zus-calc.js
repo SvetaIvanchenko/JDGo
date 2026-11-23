@@ -3,11 +3,11 @@
 window.ZUS = (function () {
   const RATE = { emer: 0.1952, rent: 0.08, chor: 0.0245, wyp: 0.0167, fp: 0.0245 };
   const DEF = {
-    podstPelny: 5652.45,   // 60% prognozowanego przeciętnego wynagrodzenia
-    podstPref: 1441.80,    // 30% minimalnego wynagrodzenia
-    zdrMin: 432.54,        // minimalna składka zdrowotna (skala/liniowy)
+    podstPelny: 5652.00,   // 60% prognozowanego przeciętnego wynagrodzenia 2026 (9420 zł)
+    podstPref: 1441.80,    // 30% minimalnego wynagrodzenia 2026 (4806 zł)
+    zdrMin: 432.54,        // minimalna składka zdrowotna 2026 (skala/liniowy)
     zdrSkala: 0.09, zdrLiniowy: 0.049,
-    zdrRycz1: 498.35, zdrRycz2: 830.58, zdrRycz3: 1494.05  // ryczałt wg progów przychodu
+    zdrRycz1: 498.35, zdrRycz2: 830.58, zdrRycz3: 1495.04  // ryczałt wg progów przychodu 2026
   };
 
   function zdrowotna(form, income, revenue, def) {
